@@ -877,6 +877,7 @@
   var uid = 0;
   var game;
   var leaderOpen = null;
+  var playerLeader = "second_wind";
 
   function unit(name) {
     var spec = catalog[name];
@@ -920,7 +921,7 @@
       secondWindReady: true,
       sentinelCharges: 3,
       sides: [
-        side(playerOrder, "second_wind"),
+        side(playerOrder, playerLeader),
         side(enemyOrder, "sentinel")
       ]
     };
@@ -1486,6 +1487,15 @@
     else game.result = "Draw";
   }
 
+  window.addEventListener("message", function (event) {
+    if (!event.data || event.data.type !== "cc-configure-battle") return;
+    var incoming = Array.isArray(event.data.deck) ? event.data.deck.filter(function (name) {
+      return Object.prototype.hasOwnProperty.call(catalog, name);
+    }) : [];
+    if (incoming.length) playerOrder = incoming.slice(0, 30);
+    if (typeof event.data.leader === "string" && event.data.leader !== "") playerLeader = event.data.leader;
+    reset();
+  });
   reset();
   var exitButton = document.getElementById("cc-exit-battle");
   if (exitButton) exitButton.addEventListener("click", function () {
