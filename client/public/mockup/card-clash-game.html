@@ -602,6 +602,11 @@ html, body {
 
 #card-clash-real-game .cc-unit-card.cc-hover {
   transform: translateY(-10px) rotate(0deg) scale(1.04);
+  border-color: var(--cc-gold);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--cc-gold) 34%, transparent),
+    0 0 30px color-mix(in srgb, var(--cc-gold) 72%, transparent),
+    0 18px 30px color-mix(in srgb, var(--foreground) 38%, transparent);
 }
 
 #card-clash-real-game .cc-unit-card.cc-dragging {
@@ -1141,6 +1146,7 @@ html, body {
     var startY = 0;
     var dragging = false;
     var suppressClick = false;
+    button.setAttribute("draggable", "true");
 
     function overTarget(event) {
       var target = document.getElementById("cc-drop");
@@ -1215,6 +1221,41 @@ html, body {
     button.addEventListener("blur", function () {
       button.classList.remove("cc-hover");
     });
+
+    button.addEventListener("dragstart", function (event) {
+      dragging = true;
+      button.classList.add("cc-dragging", "cc-hover");
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", String(index));
+      }
+      var target = document.getElementById("cc-drop");
+      if (target) target.classList.add("cc-drag-over");
+    });
+    button.addEventListener("dragend", function () {
+      dragging = false;
+      button.classList.remove("cc-dragging", "cc-hover");
+      var target = document.getElementById("cc-drop");
+      if (target) target.classList.remove("cc-drag-over");
+    });
+    var dropTarget = document.getElementById("cc-drop");
+    if (dropTarget && !dropTarget.dataset.dragBound) {
+      dropTarget.dataset.dragBound = "true";
+      dropTarget.addEventListener("dragover", function (event) {
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        dropTarget.classList.add("cc-drag-over");
+      });
+      dropTarget.addEventListener("dragleave", function () {
+        dropTarget.classList.remove("cc-drag-over");
+      });
+      dropTarget.addEventListener("drop", function (event) {
+        event.preventDefault();
+        var droppedIndex = event.dataTransfer ? Number(event.dataTransfer.getData("text/plain")) : index;
+        dropTarget.classList.remove("cc-drag-over");
+        if (Number.isFinite(droppedIndex)) commit(droppedIndex);
+      });
+    }
 
     button.addEventListener("click", function () {
       if (suppressClick) {
