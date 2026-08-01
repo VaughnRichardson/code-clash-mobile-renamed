@@ -585,7 +585,8 @@ html, body {
 #card-clash-real-game .cc-unit-card:hover,
 #card-clash-real-game .cc-unit-card:focus-visible,
 #card-clash-real-game .cc-unit-card:active,
-#card-clash-real-game .cc-unit-card.cc-dragging {
+#card-clash-real-game .cc-unit-card.cc-dragging,
+#card-clash-real-game .cc-unit-card.cc-hover {
   z-index: 10;
   border-color: color-mix(in srgb, var(--cc-gold) 86%, var(--foreground));
   box-shadow:
@@ -596,6 +597,10 @@ html, body {
 
 #card-clash-real-game .cc-unit-card:hover,
 #card-clash-real-game .cc-unit-card:focus-visible {
+  transform: translateY(-10px) rotate(0deg) scale(1.04);
+}
+
+#card-clash-real-game .cc-unit-card.cc-hover {
   transform: translateY(-10px) rotate(0deg) scale(1.04);
 }
 
@@ -1163,6 +1168,7 @@ html, body {
       var accepted = dragging && overTarget(event);
       if (dragging) suppressClick = true;
       button.classList.remove("cc-dragging");
+      button.classList.remove("cc-hover");
       button.style.removeProperty("transform");
       var target = document.getElementById("cc-drop");
       if (target) target.classList.remove("cc-drag-over");
@@ -1174,6 +1180,7 @@ html, body {
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", cancel);
       button.classList.remove("cc-dragging");
+      button.classList.remove("cc-hover");
       button.style.removeProperty("transform");
       var target = document.getElementById("cc-drop");
       if (target) target.classList.remove("cc-drag-over");
@@ -1194,6 +1201,19 @@ html, body {
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", end);
       window.addEventListener("pointercancel", cancel);
+    });
+
+    button.addEventListener("pointerenter", function () {
+      button.classList.add("cc-hover");
+    });
+    button.addEventListener("pointerleave", function () {
+      if (!dragging) button.classList.remove("cc-hover");
+    });
+    button.addEventListener("focus", function () {
+      button.classList.add("cc-hover");
+    });
+    button.addEventListener("blur", function () {
+      button.classList.remove("cc-hover");
     });
 
     button.addEventListener("click", function () {
