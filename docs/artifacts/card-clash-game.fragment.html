@@ -11,6 +11,29 @@
 </div>
 
 <style>
+:root {
+  --background: #efe4bd;
+  --foreground: #183f3b;
+  --card: #f7edc9;
+  --card-foreground: #183f3b;
+  --accent: #d5a94b;
+  --border: #b89a54;
+  --muted-foreground: #536c5c;
+  --primary: #36745a;
+  --font-size-base: 16px;
+  --font-sans: system-ui, sans-serif;
+  --viz-series-1: #bd5a48;
+  --viz-series-2: #36745a;
+}
+
+html, body {
+  margin: 0;
+  min-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: #efe4bd;
+}
+
 #card-clash-real-game {
   --cc-you: var(--viz-series-2);
   --cc-them: var(--viz-series-1);
@@ -47,6 +70,15 @@
   background: transparent;
   border-radius: 18px;
   background-image: none;
+}
+
+/* The mockup mounts this fragment as the battle surface itself. Keep the
+   standalone board from looking like a card inside the host scene. */
+#card-clash-real-game .cc-board {
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  border-radius: 0;
 }
 
 #card-clash-real-game .cc-table-art {
@@ -560,6 +592,11 @@
     0 0 0 3px color-mix(in srgb, var(--cc-gold) 26%, transparent),
     0 0 28px color-mix(in srgb, var(--cc-gold) 58%, transparent),
     0 16px 28px color-mix(in srgb, var(--foreground) 34%, transparent);
+}
+
+#card-clash-real-game .cc-unit-card:hover,
+#card-clash-real-game .cc-unit-card:focus-visible {
+  transform: translateY(-10px) rotate(0deg) scale(1.04);
 }
 
 #card-clash-real-game .cc-unit-card.cc-dragging {
