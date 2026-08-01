@@ -213,6 +213,9 @@ if CLIENT_DIST.is_dir():
     if (CLIENT_DIST / "art").is_dir():
         app.mount("/art", StaticFiles(directory=CLIENT_DIST / "art"),
                   name="art")
+    if (CLIENT_DIST / "mockup").is_dir():
+        app.mount("/mockup", StaticFiles(directory=CLIENT_DIST / "mockup"),
+                  name="mockup")
 
     @app.get("/")
     async def index() -> FileResponse:
