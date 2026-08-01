@@ -878,6 +878,7 @@
   var game;
   var leaderOpen = null;
   var playerLeader = "second_wind";
+  var battleDifficulty = "steady";
 
   function unit(name) {
     var spec = catalog[name];
@@ -917,7 +918,7 @@
       firstSeat: 0,
       busy: false,
       result: null,
-      message: "The banners are raised.",
+      message: battleDifficulty === "novice" ? "The coach leaves a lane open." : battleDifficulty === "veteran" ? "The house reads your opening." : "The banners are raised.",
       secondWindReady: true,
       sentinelCharges: 3,
       sides: [
@@ -1076,6 +1077,7 @@
   function renderHand() {
     var hand = document.getElementById("cc-hand");
     if (game.result) {
+      if (window.parent !== window) window.parent.postMessage({ type: "cc-battle-result", result: game.result }, "*");
       hand.innerHTML = '<div class="cc-result"><strong>' + game.result + '</strong><button type="button" class="btn btn-primary" id="cc-again">Battle again</button></div>';
       document.getElementById("cc-again").addEventListener("click", reset);
       return;
@@ -1494,6 +1496,7 @@
     }) : [];
     if (incoming.length) playerOrder = incoming.slice(0, 30);
     if (typeof event.data.leader === "string" && event.data.leader !== "") playerLeader = event.data.leader;
+    if (event.data.difficulty === "novice" || event.data.difficulty === "steady" || event.data.difficulty === "veteran") battleDifficulty = event.data.difficulty;
     reset();
   });
   reset();

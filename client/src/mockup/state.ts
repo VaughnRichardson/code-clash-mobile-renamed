@@ -6,7 +6,7 @@ export function createMockupState(catalog: Catalog, deck: DeckPayload): MockupSt
     screen: 'home', catalog, deck,
     campaign: { difficulty: 'steady', opponent: 'Ashen Rush', phase: 'ready' },
     compete: { code: makeRoomCode(), youReady: false, opponentJoined: false, opponentReady: false },
-    result: null,
+    result: null, battleMode: 'campaign', collectionReturn: 'home',
   }
 }
 

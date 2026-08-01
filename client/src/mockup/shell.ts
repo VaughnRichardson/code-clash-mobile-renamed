@@ -18,6 +18,8 @@ export class MockupShell {
   private actions(): MockupActions {
     return {
       go: (screen) => { this.state.screen = screen; this.render() },
+      startBattle: (mode) => { this.state.battleMode = mode; this.state.result = null; this.state.screen = 'battle'; this.render() },
+      openCollection: (returnTo) => { this.state.collectionReturn = returnTo; this.state.screen = 'collection'; this.render() },
       updateDeck: (deck) => { this.state.deck = deck; this.render() },
       setDifficulty: (difficulty) => { this.state.campaign.difficulty = difficulty; this.render() },
       setResult: (result) => { this.state.result = result; this.state.screen = 'result'; this.render() },
