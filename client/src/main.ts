@@ -5,6 +5,13 @@ import { Connection, loadCatalog } from './net'
 import { button, clear, el } from './ui'
 import type { Catalog, DeckPayload, ServerMessage } from './types'
 import { mountAtmosphere } from './atmosphere'
+import { MockupShell } from './mockup/shell'
+import { homeScreen } from './mockup/screens/home'
+import { collectionScreen } from './mockup/screens/collection'
+import { campaignScreen } from './mockup/screens/campaign'
+import { competeScreen } from './mockup/screens/compete'
+import { mockupBattleScreen } from './mockup/screens/battle'
+import { resultScreen } from './mockup/screens/result'
 
 type Screen = 'home' | 'deck' | 'lobby' | 'battle'
 
@@ -230,6 +237,18 @@ async function boot(): Promise<void> {
     return
   }
   deck = loadSavedDeck(catalog)
+  if (new URLSearchParams(location.search).has('mockup')) {
+    const mockup = new MockupShell(root, catalog, deck, {
+      home: homeScreen,
+      collection: collectionScreen,
+      campaign: campaignScreen,
+      compete: competeScreen,
+      battle: mockupBattleScreen,
+      result: resultScreen,
+    })
+    mockup.mount()
+    return
+  }
   connection.connect()
   render()
 }
