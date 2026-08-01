@@ -1429,7 +1429,6 @@
     if (game.result) {
       game.busy = false;
       render();
-      window.dispatchEvent(new CustomEvent("cc-match-result", { detail: game.result }));
       return;
     }
 
@@ -1487,49 +1486,5 @@
   }
 
   reset();
-})();
-</script>
-<style>
-  .cc-app-shell{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at 20% 10%,#ffe1c2 0 18%,transparent 42%),linear-gradient(145deg,#fff8ed,#e9f5ed 55%,#dbeaf4);font-family:ui-rounded,system-ui,sans-serif;color:#24313a;transition:opacity .25s,visibility .25s}
-  .cc-app-shell.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
-  .cc-app-card{width:min(100%,440px);border:1px solid #ffffffcc;border-radius:30px;padding:24px;background:#fffffff0;box-shadow:0 24px 80px #48605b35}
-  .cc-app-kicker{margin:0 0 8px;color:#d76a4d;font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
-  .cc-app-card h1{margin:0;font-size:36px;line-height:1;letter-spacing:-.05em}.cc-app-card p{color:#66747a;line-height:1.45}
-  .cc-app-screen{display:none}.cc-app-screen.is-active{display:block}.cc-app-actions{display:grid;gap:10px;margin-top:22px}
-  .cc-app-btn{border:0;border-radius:16px;padding:14px 16px;background:#273942;color:#fff;font:inherit;font-weight:800;cursor:pointer}.cc-app-btn.alt{background:#edf3ee;color:#30443d}.cc-app-btn.ai{background:linear-gradient(135deg,#e17c59,#b75267)}
-  .cc-app-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.cc-app-choice{padding:12px;border:2px solid #e6ebe6;border-radius:16px;background:#fff;text-align:left;cursor:pointer}.cc-app-choice.is-picked{border-color:#db7658;background:#fff2ec}.cc-app-choice strong{display:block}.cc-app-choice small{color:#77847e}
-  .cc-ai-note{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding:12px;border-radius:16px;background:#f7efe5;color:#765e48;font-size:13px}.cc-ai-dot{width:10px;height:10px;margin-top:4px;border-radius:50%;background:#df7957;box-shadow:0 0 0 5px #df79572b}
-  .cc-ai-dock{position:fixed;z-index:18;right:16px;bottom:16px;width:min(290px,calc(100vw - 32px));padding:14px;border:1px solid #ffffffaa;border-radius:20px;background:#273942eF;color:#fff;box-shadow:0 16px 40px #20363a45}.cc-ai-dock strong{display:block}.cc-ai-dock p{margin:6px 0 0;color:#d8e5df;font-size:13px;line-height:1.35}.cc-ai-dock button{margin-top:10px;border:0;border-radius:10px;padding:8px 10px;background:#f2bd72;color:#29383c;font-weight:800;cursor:pointer}
-  .cc-result{position:fixed;z-index:19;inset:0;display:none;place-items:center;background:#1c3439aa;backdrop-filter:blur(5px)}.cc-result.is-visible{display:grid}.cc-result-card{width:min(360px,calc(100% - 36px));padding:26px;border-radius:26px;background:#fff;text-align:center;box-shadow:0 24px 80px #152b304f}.cc-result-card h2{font-size:34px;margin:8px 0}.cc-result-card p{color:#6a7777}
-  @media(max-width:520px){.cc-app-card{padding:20px;border-radius:24px}.cc-app-card h1{font-size:31px}.cc-ai-dock{right:10px;bottom:10px}}
-</style>
-<div class="cc-app-shell" id="cc-app-shell">
-  <div class="cc-app-card">
-    <section class="cc-app-screen is-active" data-cc-screen="home">
-      <p class="cc-app-kicker">Card Clash · woodland league</p><h1>Build a brave little line.</h1>
-      <p>A cozy tactical card duel where your choices shape the story. Pick a deck, then let the arena teach you as you play.</p>
-      <div class="cc-ai-note"><span class="cc-ai-dot"></span><span><strong>Clash Coach is online.</strong><br>It will explain the next smart move without taking control away from you.</span></div>
-      <div class="cc-app-actions"><button class="cc-app-btn ai" data-cc-go="loadout">Start an AI match</button><button class="cc-app-btn alt" data-cc-go="loadout">Preview loadout</button></div>
-    </section>
-    <section class="cc-app-screen" data-cc-screen="loadout">
-      <p class="cc-app-kicker">Choose your approach</p><h1>What kind of clash?</h1><p>Your coach will tune its advice to the deck you bring.</p>
-      <div class="cc-app-grid"><button class="cc-app-choice is-picked" data-cc-deck="Balanced"><strong>Balanced Grove</strong><small>Reliable power + recovery</small></button><button class="cc-app-choice" data-cc-deck="Momentum"><strong>Momentum Rush</strong><small>Fast, bold, fragile</small></button><button class="cc-app-choice" data-cc-deck="Sentinel"><strong>Sentinel Wall</strong><small>Patient defense + wards</small></button><button class="cc-app-choice" data-cc-deck="Oracle"><strong>Oracle Tricks</strong><small>Read the opponent</small></button></div>
-      <div class="cc-app-actions"><button class="cc-app-btn ai" id="cc-launch-match">Enter the arena</button><button class="cc-app-btn alt" data-cc-go="home">Back</button></div>
-    </section>
-  </div>
-</div>
-<div class="cc-ai-dock" id="cc-ai-dock" hidden><strong>✦ Clash Coach</strong><p id="cc-ai-copy">Watch the lanes: the card with the brighter edge is ready to field.</p><button id="cc-ai-next">Ask for a hint</button></div>
-<div class="cc-result" id="cc-result"><div class="cc-result-card"><p class="cc-app-kicker">Match complete</p><h2 id="cc-result-title">Victory!</h2><p id="cc-result-copy">Your line held together beautifully.</p><button class="cc-app-btn ai" id="cc-replay">Play another match</button></div></div>
-<script>
-(function(){
-  var shell=document.getElementById('cc-app-shell'), dock=document.getElementById('cc-ai-dock'), copy=document.getElementById('cc-ai-copy'), selected='Balanced';
-  function screen(name){document.querySelectorAll('[data-cc-screen]').forEach(function(x){x.classList.toggle('is-active',x.dataset.ccScreen===name);});}
-  document.querySelectorAll('[data-cc-go]').forEach(function(b){b.addEventListener('click',function(){screen(b.dataset.ccGo);});});
-  document.querySelectorAll('[data-cc-deck]').forEach(function(b){b.addEventListener('click',function(){selected=b.dataset.ccDeck;document.querySelectorAll('[data-cc-deck]').forEach(function(x){x.classList.toggle('is-picked',x===b);});});});
-  document.getElementById('cc-launch-match').addEventListener('click',function(){shell.classList.add('is-hidden');dock.hidden=false;window.dispatchEvent(new Event('cc-start-match'));});
-  var hints=['Field the card with the strongest edge, then let the clash reveal the opponent.','A survivor carries value forward—protect a high-power unit when the tug is close.','The AI is watching your rhythm; vary your choices when it starts countering you.','Discard piles are information. Track what the opponent has already spent.'];
-  var hint=0;document.getElementById('cc-ai-next').addEventListener('click',function(){hint=(hint+1)%hints.length;copy.textContent=hints[hint];});
-  document.getElementById('cc-replay').addEventListener('click',function(){document.getElementById('cc-result').classList.remove('is-visible');shell.classList.remove('is-hidden');dock.hidden=true;screen('loadout');});
-  window.addEventListener('cc-match-result',function(e){var result=e.detail||'Victory';document.getElementById('cc-result-title').textContent=result+'!';document.getElementById('cc-result-copy').textContent=result==='Victory'?'Your line held together beautifully.':'The grove has more lessons for you. Try a different opening.';document.getElementById('cc-result').classList.add('is-visible');dock.hidden=true;});
 })();
 </script>

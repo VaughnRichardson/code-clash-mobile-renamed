@@ -2361,17 +2361,21 @@ html {
 #atmos-motes { opacity: 0.32; mix-blend-mode: multiply; }
 #app { position: relative; }
 
-/* Battle labels are cream, so the live table receives a translucent green
-   wash while still showing the garden and its edge foliage underneath. */
+/* Light table furniture (light-on-dark inks like `--good`, and the bare
+   `.rail.meters` figures) needs a dark ground to read against, same as the
+   home/shop/result panels get from `--panel`/`--panel-sunk`. It used to be a
+   green wash strong enough to read as a colour filter over the whole scene;
+   this is the same darkening at the same strength, but hue-neutral warm
+   brown instead of forest green, so it reads as shade rather than tint. */
 #app:has(> .table) {
   background-image:
-    linear-gradient(180deg, rgba(43, 79, 57, 0.72),
-                            rgba(36, 72, 52, 0.84)),
+    linear-gradient(180deg, rgba(43, 33, 24, 0.72),
+                            rgba(34, 26, 19, 0.84)),
     url('/art/ui/woodland-sunlit.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  box-shadow: inset 0 0 72px rgba(35, 67, 47, 0.24);
+  box-shadow: inset 0 0 72px rgba(30, 23, 17, 0.24);
 }
 
 .home-hero,
