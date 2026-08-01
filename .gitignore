@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+client/node_modules/
+client/dist/
+client/test-results/
+client/playwright-report/
+.venv/
+
+# Screenshot scratch for the visual review loop — regenerate with
+# client/tools/capture.mjs; not worth versioning.
+.review/

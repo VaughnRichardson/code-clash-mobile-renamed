@@ -1,0 +1,76 @@
+{
+  "_note": "Working art manifest. Replace a file in place, keep the size and safe areas, and no client code changes. See docs/ART_BRIEF.md.",
+  "cards": {
+    "Berserker": "art/cards/berserker.png",
+    "Brute": "art/cards/brute.png",
+    "Champion": "art/cards/champion.png",
+    "Duelist": "art/cards/duelist.png",
+    "Fortress": "art/cards/fortress.png",
+    "Grunt": "art/cards/grunt.png",
+    "Guardian": "art/cards/guardian.png",
+    "Martyr": "art/cards/martyr.png",
+    "Rallier": "art/cards/rallier.png",
+    "Soldier": "art/cards/soldier.png",
+    "Vanguard": "art/cards/vanguard.png",
+    "Warden": "art/cards/warden.png",
+    "Wraith": "art/cards/wraith.png",
+    "Warlord": "art/cards/warlord.png"
+  },
+  "leaders": {
+    "second_wind": "art/leaders/second_wind.jpg",
+    "momentum": "art/leaders/momentum.jpg",
+    "giant_slayer": "art/leaders/giant_slayer.png",
+    "blitz": "art/leaders/blitz.jpg",
+    "doomsayer": "art/leaders/doomsayer.jpg",
+    "sentinel": "art/leaders/sentinel.jpg",
+    "reaper": "art/leaders/reaper.png",
+    "gravekeeper": "art/leaders/gravekeeper.jpg",
+    "oracle": "art/leaders/oracle.jpg",
+    "ritualist": "art/leaders/ritualist.jpg"
+  },
+  "scenes": {
+    "table": "art/scenes/table.jpg",
+    "home": "art/scenes/home.jpg",
+    "result": "art/scenes/result.jpg"
+  },
+  "icons": {
+    "units": "art/icons/units.png",
+    "gold": "art/icons/gold.png",
+    "charge": "art/icons/charge.png",
+    "power": "art/icons/power.png",
+    "stamina": "art/icons/stamina.png",
+    "curse": "art/icons/curse.png",
+    "ward": "art/icons/ward.png",
+    "scout": "art/icons/scout.png",
+    "fog": "art/icons/fog.png",
+    "boss": "art/icons/boss.png",
+    "leader": "art/icons/leader.png",
+    "clash": "art/icons/clash.png"
+  },
+  "sizes": {
+    "card": {
+      "w": 512,
+      "h": 704,
+      "aspect": "8:11",
+      "safe": "keep the subject inside the top 50%; the bottom 18% carries the name strip and 45-75% can carry an ability band"
+    },
+    "leader": {
+      "w": 512,
+      "h": 704,
+      "aspect": "8:11",
+      "safe": "portrait leader card \u2014 keep the face and primary silhouette in the upper two thirds"
+    },
+    "scene": {
+      "w": 1080,
+      "h": 1920,
+      "aspect": "9:16",
+      "safe": "no subject; a wash only. It sits under all text."
+    },
+    "icon": {
+      "w": 128,
+      "h": 128,
+      "aspect": "1:1",
+      "safe": "transparent background, single colour, legible at 20px"
+    }
+  }
+}

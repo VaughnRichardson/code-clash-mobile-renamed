@@ -1,0 +1,164 @@
+{
+  "_source": "imported from testproject/resources/{cards,card_abilities}",
+  "abilities": [
+    {
+      "id": "ambush",
+      "name": "Ambush",
+      "description": "Deals damage before receiving in round 1. If the opponent is defeated in round 1, this unit takes no damage."
+    },
+    {
+      "id": "guardian",
+      "name": "Guardian",
+      "description": "Survives one lethal hit per match at 1 Stamina."
+    },
+    {
+      "id": "martyr",
+      "name": "Martyr",
+      "description": "When this unit is defeated, the next allied unit gains +2 Power."
+    },
+    {
+      "id": "rallier",
+      "name": "Rallier",
+      "description": "On win, the next allied unit gains +1 Stamina."
+    },
+    {
+      "id": "resolve",
+      "name": "Resolve",
+      "description": "Once per match, if both units would be defeated simultaneously, this unit survives at 1 Stamina."
+    },
+    {
+      "id": "steal",
+      "name": "Steal",
+      "description": "At the start of this duel, takes the opposing unit's ability. The opponent loses it permanently. Warden uses it this duel only."
+    },
+    {
+      "id": "vanguard",
+      "name": "Vanguard",
+      "description": "If this is the first unit played this battle, gains +2 Power."
+    },
+    {
+      "id": "warcry",
+      "name": "Warcry",
+      "description": "Gains +1 Power and +1 Stamina for every 5 allied units in the discard stack when this unit enters combat."
+    }
+  ],
+  "cards": [
+    {
+      "name": "Berserker",
+      "power": 7,
+      "stamina": 4,
+      "ability": "warcry",
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "Each fallen ally fuels the frenzy."
+    },
+    {
+      "name": "Brute",
+      "power": 9,
+      "stamina": 3,
+      "ability": null,
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "Hits like a landslide. Falls like one too."
+    },
+    {
+      "name": "Champion",
+      "power": 8,
+      "stamina": 5,
+      "ability": null,
+      "deck_limit": 1,
+      "unique": true,
+      "flavor": "There can be only one."
+    },
+    {
+      "name": "Duelist",
+      "power": 5,
+      "stamina": 4,
+      "ability": "resolve",
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "When both blades fall, only resolve keeps you standing."
+    },
+    {
+      "name": "Fortress",
+      "power": 3,
+      "stamina": 9,
+      "ability": null,
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "They built a wall. It punched back."
+    },
+    {
+      "name": "Grunt",
+      "power": 7,
+      "stamina": 5,
+      "ability": null,
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "The backbone of every army. Unremarkable, but reliable."
+    },
+    {
+      "name": "Guardian",
+      "power": 3,
+      "stamina": 6,
+      "ability": "guardian",
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "One moment of defiance can change a battle."
+    },
+    {
+      "name": "Martyr",
+      "power": 4,
+      "stamina": 6,
+      "ability": "martyr",
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "Their sacrifice becomes the next warrior's strength."
+    },
+    {
+      "name": "Rallier",
+      "power": 6,
+      "stamina": 5,
+      "ability": "rallier",
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "Victory is contagious when the right voice leads the charge."
+    },
+    {
+      "name": "Soldier",
+      "power": 6,
+      "stamina": 6,
+      "ability": null,
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "Balanced in all things. A steady hand wins wars."
+    },
+    {
+      "name": "Vanguard",
+      "power": 6,
+      "stamina": 4,
+      "ability": "vanguard",
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "First in. Last standing. That's the plan."
+    },
+    {
+      "name": "Warden",
+      "power": 2,
+      "stamina": 7,
+      "ability": "steal",
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "What's yours is mine. For now."
+    },
+    {
+      "name": "Wraith",
+      "power": 4,
+      "stamina": 5,
+      "ability": "ambush",
+      "deck_limit": 3,
+      "unique": false,
+      "flavor": "You never see the first strike. Sometimes, there is no second."
+    }
+  ]
+}
