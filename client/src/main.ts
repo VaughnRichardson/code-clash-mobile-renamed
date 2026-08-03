@@ -25,6 +25,11 @@ let battleScreen: BattleScreen | null = null
 let status: 'connecting' | 'open' | 'closed' = 'connecting'
 let accountOpen = false
 const offlineMode = new URLSearchParams(location.search).has('mockup')
+const campaignIdentity = `Solo-${(
+  typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID().replace(/-/g, '')
+    : Math.random().toString(36).slice(2)
+).slice(0, 8)}`
 
 function go(next: Screen): void { screen = next; render() }
 function openDeck(returnTo: 'home' | 'campaign' | 'compete'): void { deckReturn = returnTo; go('deck') }
@@ -46,6 +51,7 @@ function sessionNameInput(id: string): HTMLInputElement {
 }
 
 function startOfflineBattle(mode: 'campaign' | 'compete'): void {
+  const selectedDeck = structuredClone(deck)
   clear(root)
   screen = 'battle'
   root.dataset.screen = 'battle'
@@ -53,8 +59,20 @@ function startOfflineBattle(mode: 'campaign' | 'compete'): void {
     button('Back to menu', () => { screen = 'home'; render() }, { class: 'mockup-secondary' }),
     el('span', { class: 'mockup-eyebrow', text: mode === 'compete' ? 'Offline compete preview' : 'Offline campaign preview' })))
   const frame = el('iframe', { class: 'mockup-real-battle', title: 'Offline Card Clash battle', src: '/mockup/card-clash-game.html' })
-  frame.addEventListener('load', () => frame.contentWindow?.postMessage({ type: 'cc-configure-battle', deck: deck.cards, leader: deck.leader }, '*'))
+  frame.addEventListener('load', () => frame.contentWindow?.postMessage({
+    type: 'cc-configure-battle', deck: selectedDeck.cards,
+    leader: selectedDeck.leader,
+  }, '*'))
   root.append(frame)
+}
+
+function startCampaign(difficulty: string): void {
+  if (offlineMode) return startOfflineBattle('campaign')
+  const selectedDeck = structuredClone(deck)
+  lastError = ''
+  lobby = null
+  connection.createRoom(campaignIdentity, selectedDeck, true, difficulty)
+  go('lobby')
 }
 
 function renderHome(): void {
@@ -111,12 +129,9 @@ function renderHome(): void {
     el('p', { class: 'mode-copy', text: 'A private match for learning a deck or sharpening an opening.' }),
     el('label', { text: 'House temperament' }), difficulty,
     el('div', { style: 'height:10px' }),
-    button('Start battle', () => {
-      const name = sessionName()
-      if (!name) return fail('Choose a name before starting a battle.')
-      if (offlineMode) return startOfflineBattle('campaign')
-      lastError = ''; lobby = null; connection.createRoom(name, deck, true, difficulty.value); go('lobby')
-    }, { class: 'primary wide', id: 'play-npc' }))
+    button('Start battle', () => startCampaign(difficulty.value), {
+      class: 'primary wide', id: 'play-npc',
+    }))
   root.append(campaignPanel)
 
   const codeInput = el('input', { id: 'code', placeholder: 'ROOM CODE', maxLength: 4, autocapitalize: 'characters', autocomplete: 'off' })
@@ -155,8 +170,6 @@ function renderCampaign(): void {
   clear(root)
   root.dataset.screen = 'campaign'
 
-  const nameInput = sessionNameInput('campaign-name')
-
   const difficulty = el('select', { id: 'difficulty' })
   for (const level of catalog.difficulties) difficulty.append(el('option', {
     value: level, text: level[0].toUpperCase() + level.slice(1), selected: level === 'steady',
@@ -173,17 +186,11 @@ function renderCampaign(): void {
     el('h2', { text: deck.name }),
     el('p', { class: 'mode-copy', text: `${deck.cards.length}/${catalog.deck_size} cards · ${catalog.leaders.find(item => item.id === deck.leader)?.name ?? 'Leader'}` }),
     button('Choose or edit deck', () => openDeck('campaign'), { class: 'ghost wide' }),
-    el('label', { class: 'campaign-session-label', htmlFor: 'campaign-name', text: 'Session name' }),
-    nameInput,
     el('label', { text: 'House temperament' }),
     difficulty,
-    lastError ? el('div', { class: 'error session-name-error', role: 'alert', text: lastError }) : null,
-    button('Start battle', () => {
-      const name = sessionName()
-      if (!name) return fail('Choose a session name before starting a battle.')
-      if (offlineMode) return startOfflineBattle('campaign')
-      lastError = ''; lobby = null; connection.createRoom(name, deck, true, difficulty.value); go('lobby')
-    }, { class: 'primary wide', id: 'play-npc' })))
+    button('Start battle', () => startCampaign(difficulty.value), {
+      class: 'primary wide', id: 'play-npc',
+    })))
 }
 
 function renderCompete(): void {

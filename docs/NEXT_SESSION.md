@@ -49,9 +49,9 @@ Result/end-of-match remains the next screen to review.
     Lobby, and Battle.
   - Session names are visit-scoped rather than persisted as accounts.
   - Deck-editor return targets preserve the calling screen.
-  - Campaign exposes its own session-name field and visible validation after a
-    deck is selected, so Start Battle cannot silently fail after returning from
-    Deck Creator.
+  - Campaign does not ask for or use a player-facing session name. Start Battle
+    clones the currently selected deck and launches it with an internal unique
+    solo connection identity; session names remain a Compete-only concern.
   - Offline room creation uses the real packaged battle artifact.
 - `client/src/deckbuilder.ts`
   - Integrated leader/card editor and local deck persistence.
@@ -124,11 +124,14 @@ result: passed
 client: npm run build (functional compact deck creator iteration)
 result: passed
 
-client: npm run build (Campaign deck handoff / visible session-name fix)
+client: npm run build (Campaign exact-deck launch / no player-facing name)
 result: passed
 
-client: npm test -- --grep "Campaign exposes a missing session name"
+client: npm test -- --grep "Campaign launches the exact selected deck"
 result: 1 passed
+
+client: Campaign-related online/offline regression batch
+result: 3 passed
 
 client browser suite (completed in bounded batches)
 result: 17 passed, 1 skipped

@@ -259,9 +259,7 @@
   font-weight: 900;
 }
 
-/* Campaign is a complete launch surface. A player who returns from the deck
-   creator can name the session and start immediately without an invisible
-   validation dependency on the Home screen. */
+/* Campaign is a direct selected-deck launch surface. */
 #app[data-screen='campaign'] .campaign-setup-card {
   display: grid;
   gap: 8px;
@@ -276,7 +274,6 @@
   margin-bottom: 5px;
 }
 
-#app[data-screen='campaign'] .campaign-session-label,
 #app[data-screen='campaign'] .campaign-setup-card > label {
   margin-top: 5px;
   color: #f7d45f;
@@ -284,10 +281,6 @@
   font-weight: 900;
   letter-spacing: .08em;
   text-transform: uppercase;
-}
-
-#app[data-screen='campaign'] .session-name-error {
-  margin: 3px 0 0;
 }
 
 .deck-creator-error {

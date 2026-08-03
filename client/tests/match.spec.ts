@@ -206,20 +206,24 @@ test('the compact deck creator selects decks, collapses, reorders, and returns',
   await expect(page.getByRole('button', { name: 'Start battle' })).toBeVisible()
 })
 
-test('Campaign exposes a missing session name after returning from the deck builder', async ({ page }) => {
+test('Campaign launches the exact selected deck without asking for a session name', async ({ page }) => {
   await page.setViewportSize(PHONE)
   await page.goto('/')
   await openCampaign(page)
   await page.getByRole('button', { name: 'Choose or edit deck' }).click()
+
+  await page.getByRole('button', { name: 'Duplicate deck' }).click()
+  await page.getByRole('textbox', { name: 'Deck name' }).fill('Oracle Trial')
+  await page.locator('[data-leader="oracle"]').click()
   await page.getByRole('button', { name: 'Use this deck and return' }).click()
 
-  await expect(page.getByRole('heading', { name: 'Starter' })).toBeVisible()
-  await page.getByRole('button', { name: 'Start battle' }).click()
-  await expect(page.getByRole('alert')).toContainText('Choose a session name')
+  await expect(page.getByRole('heading', { name: 'Oracle Trial' })).toBeVisible()
+  await expect(page.getByText('30/30 cards · Oracle', { exact: true })).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Session name' })).toHaveCount(0)
 
-  await page.getByRole('textbox', { name: 'Session name' }).fill('DeckHandoff')
   await page.getByRole('button', { name: 'Start battle' }).click()
   await expect(page.locator('[data-side="you"]')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'What Oracle does' })).toBeVisible()
 })
 
 test('a leader can be chosen and is carried into the battle', async ({ page }) => {
