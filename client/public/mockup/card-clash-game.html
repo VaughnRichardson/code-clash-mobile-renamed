@@ -150,12 +150,13 @@ html, body {
 }
 
 #card-clash-real-game .cc-you .cc-piles {
-  flex-direction: row;
+  flex-direction: row-reverse;
 }
 
 #card-clash-real-game .cc-them .cc-piles {
   top: clamp(18px, 4vh, 32px);
   left: clamp(18px, 16vw, 210px);
+  flex-direction: row;
   transform: none;
 }
 
@@ -204,11 +205,11 @@ html, body {
 #card-clash-real-game .cc-discard-leaf {
   border-color: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
   background: color-mix(in srgb, var(--muted) 72%, transparent);
-  transform: translate(calc(var(--i) * 1px), calc(var(--i) * -1px)) rotate(-7deg);
+  transform: translate(calc(var(--i) * 1px), calc(var(--i) * -1px)) rotate(0deg);
 }
 
 #card-clash-real-game .cc-them .cc-discard-leaf {
-  transform: translate(calc(var(--i) * -1px), calc(var(--i) * -1px)) rotate(7deg);
+  transform: translate(calc(var(--i) * -1px), calc(var(--i) * -1px)) rotate(0deg);
 }
 
 #card-clash-real-game .cc-discard-leaf::before,
@@ -961,6 +962,53 @@ html, body {
 
   #card-clash-real-game .cc-pip {
     width: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  #card-clash-real-game .cc-piles {
+    gap: 8px;
+  }
+
+  #card-clash-real-game .cc-them .cc-piles {
+    left: 2%;
+  }
+
+  #card-clash-real-game .cc-you .cc-piles {
+    right: 2%;
+  }
+
+  #card-clash-real-game .cc-them .cc-deck,
+  #card-clash-real-game .cc-them .cc-discard {
+    width: clamp(46px, 13vw, 52px);
+  }
+
+  #card-clash-real-game .cc-you .cc-deck,
+  #card-clash-real-game .cc-you .cc-discard {
+    width: clamp(56px, 16vw, 64px);
+  }
+
+  #card-clash-real-game .cc-them .cc-deck,
+  #card-clash-real-game .cc-them .cc-discard {
+    transform: perspective(260px) rotateX(7deg);
+    transform-origin: 50% 100%;
+  }
+
+  #card-clash-real-game .cc-them .cc-leader {
+    width: clamp(68px, 19vw, 74px);
+  }
+
+  #card-clash-real-game .cc-you .cc-leader {
+    width: clamp(74px, 21vw, 82px);
+  }
+
+  #card-clash-real-game .cc-stage-card,
+  #card-clash-real-game .cc-card-back {
+    width: clamp(92px, 27vw, 106px);
+  }
+
+  #card-clash-real-game .cc-you .cc-stage-card {
+    width: clamp(104px, 31vw, 122px);
   }
 }
 

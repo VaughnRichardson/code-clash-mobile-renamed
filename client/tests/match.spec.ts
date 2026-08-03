@@ -81,7 +81,7 @@ test('the account button opens the session profile and named decks persist', asy
 
   await page.click('#edit-deck')
   await page.fill('.deck-creator-name-input', 'Dawn Order')
-  await page.getByRole('button', { name: 'Save deck' }).click()
+  await page.getByRole('button', { name: 'Use this deck and return' }).click()
   await page.reload()
   await page.click('#edit-deck')
   await expect(page.locator('.deck-creator-name-input')).toHaveValue('Dawn Order')
@@ -170,10 +170,56 @@ test('the deck builder enforces card limits and legal deck size', async ({ page 
   await expect(page.getByRole('button', { name: 'Add Grunt' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Remove Vanguard' }).click()
   await expect(page.locator('.deck-creator-count')).toHaveText('29/30')
-  await page.getByRole('button', { name: 'Save deck' }).click()
+  await page.getByRole('button', { name: 'Use this deck and return' }).click()
   await expect(page.locator('.error')).toContainText('exactly 30 cards')
   await page.getByRole('button', { name: 'Add Vanguard' }).click()
   await expect(page.locator('.deck-creator-count')).toHaveText('30/30')
+})
+
+test('the compact deck creator selects decks, collapses, reorders, and returns', async ({ page }) => {
+  await openApp(page, 'DeckEditorFlow')
+  await openCampaign(page)
+  await page.getByRole('button', { name: 'Choose or edit deck' }).click()
+
+  await page.getByRole('button', { name: 'Choose a deck' }).click()
+  await expect(page.getByRole('menu')).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: /Choose Starter/ })).toBeVisible()
+
+  // Choosing the current deck closes the menu without losing the return path.
+  await page.getByRole('menuitem', { name: /Choose Starter/ }).click()
+  await page.locator('.deck-creator-grabber').click()
+  await expect(page.locator('.deck-creator-order-panel')).toBeVisible()
+
+  const orderNames = await page.locator('.deck-creator-order-copy strong').allInnerTexts()
+  const boundary = orderNames.findIndex((name, index) =>
+    index < orderNames.length - 1 && name !== orderNames[index + 1])
+  expect(boundary).toBeGreaterThanOrEqual(0)
+  const movingRow = page.locator(`[data-deck-index="${boundary}"]`)
+  const movingName = orderNames[boundary]
+  await movingRow.getByRole('button', { name: `Move ${movingName} later` }).click()
+  await expect(page.locator(
+    `[data-deck-index="${boundary + 1}"] .deck-creator-order-copy strong`))
+    .toHaveText(movingName)
+
+  await page.getByRole('button', { name: 'Use this deck and return' }).click()
+  await expect(page.getByRole('heading', { name: 'Play the house' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Start battle' })).toBeVisible()
+})
+
+test('Campaign exposes a missing session name after returning from the deck builder', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await page.goto('/')
+  await openCampaign(page)
+  await page.getByRole('button', { name: 'Choose or edit deck' }).click()
+  await page.getByRole('button', { name: 'Use this deck and return' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Starter' })).toBeVisible()
+  await page.getByRole('button', { name: 'Start battle' }).click()
+  await expect(page.getByRole('alert')).toContainText('Choose a session name')
+
+  await page.getByRole('textbox', { name: 'Session name' }).fill('DeckHandoff')
+  await page.getByRole('button', { name: 'Start battle' }).click()
+  await expect(page.locator('[data-side="you"]')).toBeVisible()
 })
 
 test('a leader can be chosen and is carried into the battle', async ({ page }) => {
@@ -181,7 +227,7 @@ test('a leader can be chosen and is carried into the battle', async ({ page }) =
   await page.click('#edit-deck')
   await page.locator('[data-leader="oracle"]').click()
   await expect(page.locator('[data-leader="oracle"]')).toHaveClass(/selected/)
-  await page.getByRole('button', { name: 'Save deck' }).click()
+  await page.getByRole('button', { name: 'Use this deck and return' }).click()
   await expect(page.locator('#edit-deck')).toContainText('Oracle')
 })
 

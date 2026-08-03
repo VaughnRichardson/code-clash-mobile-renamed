@@ -2,6 +2,312 @@
 .collection-move { width:40px; min-height:40px; }
 .collection-card-add,.collection-card-remove { width:38px; min-height:38px; }
 .collection-card-remove { right:44px; }
+
+/* Functional compact deck creator: the pool is a real bottom sheet. Collapse
+   it to expose the ordered draw list; reopen it to edit leaders and counts. */
+.deck-creator-sheet {
+  transition: top 180ms ease-out;
+}
+
+.deck-creator-sheet.collapsed {
+  top: calc(100dvh - 84px);
+}
+
+.deck-creator-sheet.collapsed .deck-creator-scroll {
+  display: none;
+}
+
+.deck-creator-grabber {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 58px;
+  height: 24px;
+  min-height: 24px;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.deck-creator-grabber::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 38px;
+  height: 4px;
+  border-radius: 3px;
+  background: rgba(255, 248, 220, .5);
+}
+
+.deck-creator-grabber::after {
+  content: 'Deck order';
+  position: absolute;
+  top: 3px;
+  left: 64px;
+  width: 90px;
+  color: rgba(255, 248, 220, .76);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.deck-creator-sheet.collapsed .deck-creator-grabber::after {
+  content: 'Open card pool';
+}
+
+.deck-creator-scrim {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+#app[data-screen='deck'][data-deck-sheet='collapsed'] .deck-creator-peek,
+#app[data-screen='deck'][data-deck-sheet='collapsed'] .deck-creator-scrim {
+  display: none;
+}
+
+.deck-creator-order-panel {
+  position: absolute;
+  z-index: 1;
+  inset: 122px 10px 94px;
+  display: none;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(84, 124, 93, .62);
+  border-radius: 14px;
+  color: #284d39;
+  background: rgba(255, 253, 226, .78);
+  box-shadow: 0 8px 24px rgba(46, 55, 29, .2);
+}
+
+#app[data-screen='deck'][data-deck-sheet='collapsed'] .deck-creator-order-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-creator-order-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(63, 105, 76, .22);
+  background: rgba(247, 243, 207, .84);
+}
+
+.deck-creator-order-heading div {
+  display: grid;
+  margin-right: auto;
+}
+
+.deck-creator-order-heading strong {
+  font: 700 16px var(--font-display);
+}
+
+.deck-creator-order-heading small,
+.deck-creator-order-heading > span {
+  color: #5a765e;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.deck-creator-order-list {
+  display: grid;
+  gap: 5px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 7px;
+  overscroll-behavior: contain;
+}
+
+.deck-creator-order-card {
+  display: grid;
+  grid-template-columns: 27px 36px minmax(0, 1fr) 40px 40px;
+  align-items: center;
+  gap: 6px;
+  min-height: 52px;
+  padding: 4px 5px;
+  border: 1px solid rgba(72, 114, 83, .42);
+  border-radius: 9px;
+  background: rgba(255, 254, 231, .72);
+  box-shadow: 0 2px 5px rgba(45, 67, 41, .1);
+  touch-action: pan-y;
+}
+
+.deck-creator-order-card.dragging { opacity: .42; }
+.deck-creator-order-card.drag-over {
+  border-color: #c69b38;
+  box-shadow: 0 0 0 2px rgba(240, 196, 95, .48);
+}
+
+.deck-creator-order-number {
+  color: #926d1f;
+  font-size: 11px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.deck-creator-order-art {
+  width: 34px;
+  aspect-ratio: 8 / 11;
+  overflow: hidden;
+  border: 1px solid #a7792f;
+  border-radius: 5px;
+  background: #263c31;
+}
+
+.deck-creator-order-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.deck-creator-order-copy {
+  display: grid;
+  min-width: 0;
+}
+
+.deck-creator-order-copy strong,
+.deck-creator-order-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deck-creator-order-copy strong { font-size: 12px; }
+.deck-creator-order-copy small { color: #637660; font-size: 9px; }
+
+.deck-creator-order-move {
+  width: 40px;
+  min-height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #7ca083;
+  border-radius: 8px;
+  color: #f8f1cf;
+  background: #315f4c;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.deck-creator-order-move:disabled { opacity: .3; }
+
+.deck-creator-sheet-header { position: relative; }
+
+.deck-creator-choose[aria-expanded='true'] {
+  color: #241a08;
+  background: #f0c45f;
+}
+
+.deck-creator-icon.save {
+  width: 64px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.deck-creator-menu {
+  position: absolute;
+  z-index: 8;
+  top: 53px;
+  right: 16px;
+  left: 16px;
+  display: grid;
+  gap: 5px;
+  max-height: min(330px, 48dvh);
+  overflow-y: auto;
+  padding: 7px;
+  border: 1px solid #a7792f;
+  border-radius: 11px;
+  background: rgba(20, 48, 36, .99);
+  box-shadow: 0 14px 28px rgba(8, 20, 14, .52);
+}
+
+.deck-creator-menu-item,
+.deck-creator-menu-new {
+  display: grid;
+  justify-items: start;
+  min-height: 48px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 248, 220, .24);
+  border-radius: 8px;
+  color: #fff8dc;
+  background: rgba(255, 255, 255, .07);
+  text-align: left;
+}
+
+.deck-creator-menu-item.selected {
+  border-color: #f0c45f;
+  background: rgba(240, 196, 95, .18);
+}
+
+.deck-creator-menu-item small {
+  color: rgba(255, 248, 220, .68);
+  font-size: 10px;
+}
+
+.deck-creator-menu-new {
+  display: block;
+  color: #254b3a;
+  background: #f0d475;
+  font-weight: 900;
+}
+
+/* Campaign is a complete launch surface. A player who returns from the deck
+   creator can name the session and start immediately without an invisible
+   validation dependency on the Home screen. */
+#app[data-screen='campaign'] .campaign-setup-card {
+  display: grid;
+  gap: 8px;
+}
+
+#app[data-screen='campaign'] .campaign-setup-card h2,
+#app[data-screen='campaign'] .campaign-setup-card p {
+  margin-block: 0;
+}
+
+#app[data-screen='campaign'] .campaign-setup-card .wide {
+  margin-bottom: 5px;
+}
+
+#app[data-screen='campaign'] .campaign-session-label,
+#app[data-screen='campaign'] .campaign-setup-card > label {
+  margin-top: 5px;
+  color: #f7d45f;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+#app[data-screen='campaign'] .session-name-error {
+  margin: 3px 0 0;
+}
+
+.deck-creator-error {
+  flex: none;
+  margin: 0 16px 7px;
+}
+
+@media (max-width: 360px) {
+  .deck-creator-order-panel { right: 7px; left: 7px; }
+  .deck-creator-order-card {
+    grid-template-columns: 24px 32px minmax(0, 1fr) 40px 40px;
+    gap: 4px;
+    padding-inline: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-creator-sheet { transition: none; }
+}
+
 .lobby-actions {
   display: grid;
   grid-template-columns: minmax(110px, .38fr) minmax(0, 1fr);
@@ -61,19 +367,21 @@
   translate: 0;
 }
 .seat.you .pile-zone {
-  right: 10%;
+  right: 2%;
   bottom: clamp(18px, 4vh, 32px);
   translate: 0;
 }
 
 .seat.them .deck,
-.seat.you .deck { order: 1; }
+.seat.you .discard { order: 1; }
 .seat.them .discard,
-.seat.you .discard { order: 2; }
+.seat.you .deck { order: 2; }
 
 .deck,
 .discard { width: var(--pile-w); }
 .discard-pile { width: 100%; }
+.seat.them .discard-pile,
+.seat.you .discard-pile { rotate: 0deg; }
 .discard-pile.empty {
   opacity: .58;
   filter: saturate(.7);
@@ -150,6 +458,39 @@
   text-transform: none;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+}
+
+/* A tall phone needs a slightly wider camera. Shrinking the physical pieces,
+   rather than squeezing their gaps, leaves room for mirrored deck zones. */
+@media (max-width: 600px) {
+  .table {
+    --far-card: 108px;
+    --near-card: 128px;
+    --mark-w: 82px;
+  }
+
+  .pile-zone { gap: 8px; }
+  .seat.them .pile-zone {
+    --pile-w: 52px;
+    --pile-zone-w: 112px;
+    left: 2%;
+  }
+  .seat.you .pile-zone {
+    --pile-w: 64px;
+    --pile-zone-w: 136px;
+    right: 2%;
+  }
+
+  .seat.them .discard {
+    transform: rotateX(8deg);
+    transform-origin: 50% 100%;
+  }
+
+  .seat.them .leader-chip { width: 74px; }
+  .seat.you .leader-chip { width: 82px; }
+  .leader-card-art { inset: 4px 4px 43px; }
+  .leader-chip .nm { bottom: 28px; height: 15px; font-size: 7.4px; }
+  .leader-rule { height: 24px; font-size: 5.9px; }
 }
 
 @media (max-height: 740px) {

@@ -8,6 +8,7 @@ import { Connection, loadCatalog } from './net'
 import { button, clear, el } from './ui'
 import type { Catalog, DeckPayload, ServerMessage } from './types'
 import { mountAtmosphere } from './atmosphere'
+import { layoutEditorEnabled } from './layout-editor'
 
 type Screen = 'home' | 'campaign' | 'compete' | 'deck' | 'lobby' | 'battle'
 
@@ -30,6 +31,20 @@ function openDeck(returnTo: 'home' | 'campaign' | 'compete'): void { deckReturn 
 function fail(message: string): void { lastError = message; render() }
 function sessionName(): string { return playerName.trim() }
 
+function sessionNameInput(id: string): HTMLInputElement {
+  const input = el('input', {
+    id, placeholder: 'Choose a session name', value: playerName, maxLength: 20,
+    'aria-label': 'Session name', autocomplete: 'off',
+  })
+  input.addEventListener('input', () => {
+    playerName = input.value
+    if (!lastError.toLowerCase().includes('name')) return
+    lastError = ''
+    root.querySelector('.session-name-error')?.remove()
+  })
+  return input
+}
+
 function startOfflineBattle(mode: 'campaign' | 'compete'): void {
   clear(root)
   screen = 'battle'
@@ -46,10 +61,7 @@ function renderHome(): void {
   clear(root)
   root.dataset.screen = 'home'
 
-  const nameInput = el('input', {
-    id: 'name', placeholder: 'Choose a session name', value: playerName, maxLength: 20,
-  })
-  nameInput.addEventListener('input', () => { playerName = nameInput.value })
+  const nameInput = sessionNameInput('name')
 
   const accountButton = button('♙', () => { accountOpen = !accountOpen; renderHome() }, {
     class: 'home-account-button', id: 'account-button', 'aria-label': 'Open account',
@@ -70,6 +82,10 @@ function renderHome(): void {
     class: 'home-deck-link', id: 'edit-deck', 'aria-label': 'Open collection and edit deck',
   }))
   root.append(accountPanel)
+  if (layoutEditorEnabled) root.append(el('div', {
+    class: 'layout-editor-armed-note',
+    text: 'Layout editor armed — start a live Campaign battle, then drag and resize the battlefield pieces.',
+  }))
   if (lastError) root.append(el('div', { class: 'error home-error', text: lastError }))
   if (status === 'closed') root.append(el('div', { class: 'error home-error', text: 'Disconnected from the server. Reload to try again.' }))
 
@@ -139,6 +155,8 @@ function renderCampaign(): void {
   clear(root)
   root.dataset.screen = 'campaign'
 
+  const nameInput = sessionNameInput('campaign-name')
+
   const difficulty = el('select', { id: 'difficulty' })
   for (const level of catalog.difficulties) difficulty.append(el('option', {
     value: level, text: level[0].toUpperCase() + level.slice(1), selected: level === 'steady',
@@ -155,11 +173,14 @@ function renderCampaign(): void {
     el('h2', { text: deck.name }),
     el('p', { class: 'mode-copy', text: `${deck.cards.length}/${catalog.deck_size} cards · ${catalog.leaders.find(item => item.id === deck.leader)?.name ?? 'Leader'}` }),
     button('Choose or edit deck', () => openDeck('campaign'), { class: 'ghost wide' }),
+    el('label', { class: 'campaign-session-label', htmlFor: 'campaign-name', text: 'Session name' }),
+    nameInput,
     el('label', { text: 'House temperament' }),
     difficulty,
+    lastError ? el('div', { class: 'error session-name-error', role: 'alert', text: lastError }) : null,
     button('Start battle', () => {
       const name = sessionName()
-      if (!name) return fail('Choose a session name on the Home screen before starting a battle.')
+      if (!name) return fail('Choose a session name before starting a battle.')
       if (offlineMode) return startOfflineBattle('campaign')
       lastError = ''; lobby = null; connection.createRoom(name, deck, true, difficulty.value); go('lobby')
     }, { class: 'primary wide', id: 'play-npc' })))

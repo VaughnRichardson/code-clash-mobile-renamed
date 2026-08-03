@@ -1,5 +1,6 @@
 import { button, clear, el, pretty } from './ui'
 import { cardArt, image, leaderArt } from './art'
+import { BattleLayoutEditor, layoutEditorEnabled } from './layout-editor'
 import type {
   BattleEvent, CardView, Catalog, GameState, ItemSpec, LeaderSpec,
   PromptRequest, SideView,
@@ -137,6 +138,7 @@ export class BattleScreen {
       this.abilities[ability.id] = ability
     }
     for (const leader of catalog.leaders ?? []) this.leaders[leader.id] = leader
+    if (layoutEditorEnabled) new BattleLayoutEditor(root)
   }
 
   update(state: GameState, events: BattleEvent[], prompt: PromptRequest | null,

@@ -35,6 +35,11 @@ in lockstep when making future changes.
    defeat, the top discarded monster is shown face-up. Leader cards include
    readable names and compact rules text.
 
+The current mobile perspective iteration places each draw pile on the outside
+rail (enemy upper-left, player lower-right) and its straight discard pile just
+inside it. Far-side cards and piles are smaller and foreshortened; near-side
+pieces are larger. This iteration is still in the owner review loop.
+
 Result/end-of-match remains the next screen to review.
 
 ## Implementation map
@@ -44,14 +49,30 @@ Result/end-of-match remains the next screen to review.
     Lobby, and Battle.
   - Session names are visit-scoped rather than persisted as accounts.
   - Deck-editor return targets preserve the calling screen.
+  - Campaign exposes its own session-name field and visible validation after a
+    deck is selected, so Start Battle cannot silently fail after returning from
+    Deck Creator.
   - Offline room creation uses the real packaged battle artifact.
 - `client/src/deckbuilder.ts`
   - Integrated leader/card editor and local deck persistence.
   - Back and Save callbacks return to the correct calling screen.
+  - The compact sheet now has a functional saved-deck menu, duplicate/new
+    deck actions, a tappable collapse handle/backdrop, and an ordered draw list
+    with touch-sized earlier/later controls plus desktop drag-and-drop.
+  - The checkmark is wired as `Use this deck and return`; it validates the
+    30-card rule, saves the selected library entry, and returns to Campaign or
+    Compete according to the screen that opened the editor.
 - `client/src/reference.css` and `client/src/reference-fixes.css`
   - Approved visual overrides for the reviewed screens.
   - `reference-fixes.css` owns the latest live battle geometry; keep battle
     adjustments there unless the older rules in `styles.css` are consolidated.
+- `client/src/layout-editor.ts` and `client/src/layout-editor.css`
+  - Developer-only direct manipulation for the real online battle. Open the
+    app with `?layoutEditor=1`, start a live Campaign battle, then tap/drag a
+    battlefield object or choose it from the editor.
+  - Supports per-object and whole-board zoom, numeric X/Y offsets, undo,
+    per-object/all reset, local browser persistence, collapsing the controls,
+    and copying a JSON layout payload for the owner to paste into Codex.
 - `client/public/mockup/card-clash-game.html`
   - Playable offline battle used by the mockup flow.
   - Mirrors the accepted live battle geometry and face-up discard behavior.
@@ -96,6 +117,18 @@ result: 15 passed, 1 skipped
 
 manual browser check: normal online Campaign → Battle at 390×844
 result: passed; two discard slots and both leader cards present
+
+client: npm run build (perspective rail + layout editor iteration)
+result: passed
+
+client: npm run build (functional compact deck creator iteration)
+result: passed
+
+client: npm run build (Campaign deck handoff / visible session-name fix)
+result: passed
+
+client: npm test -- --grep "Campaign exposes a missing session name"
+result: 1 passed
 ```
 
 The skipped browser case is the retired ordered-list Deck Builder contract; the
