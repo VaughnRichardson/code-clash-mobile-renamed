@@ -48,6 +48,27 @@ deck label updates, Back to menu is the only battle exit, and the iframe
 contains no cc-exit-battle control.
 ```
 
+## 2026-08-03 battle drag reliability update
+
+- **Live battle card drags now keep tracking outside the card.** During a
+  hand-card drag, movement, release, and cancellation are listened for at the
+  window for the duration of the gesture, with pointer capture retained as an
+  additional safeguard. This prevents a finger or pointer released over the
+  open field from being lost after the card leaves its original bounds.
+- **Mockup drag is covered as a real gesture.** The focused browser test moves
+  a battle card from the hand to the field with pointer down/move/up coordinates
+  and verifies that it becomes the player field card.
+
+Verification for this update:
+
+```text
+client: npm run build
+result: passed
+
+client: npm test -- --grep "mockup battle card can be dragged|mockup mode uses"
+result: 2 passed
+```
+
 ## Approved screen flow
 
 1. **Home** — three equal-height portrait cards in this order: Campaign,

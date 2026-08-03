@@ -110,6 +110,29 @@ test('mockup mode uses the same home, collection, and offline compete flow', asy
   await expect(page.locator('h1')).toHaveText('Card Clash')
 })
 
+test('a mockup battle card can be dragged from hand onto the open field', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await page.goto('/?mockup')
+  await openCampaign(page)
+  await page.getByRole('button', { name: 'Start battle' }).click()
+
+  const battle = page.frameLocator('.mockup-real-battle')
+  const card = battle.locator('.cc-unit-card').first()
+  const field = battle.locator('#cc-drop')
+  await expect(card).toBeVisible()
+  await expect(field).toBeVisible()
+
+  const cardBox = await card.boundingBox()
+  const fieldBox = await field.boundingBox()
+  expect(cardBox).not.toBeNull()
+  expect(fieldBox).not.toBeNull()
+  await page.mouse.move(cardBox!.x + cardBox!.width / 2, cardBox!.y + cardBox!.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(fieldBox!.x + fieldBox!.width / 2, fieldBox!.y + fieldBox!.height / 2, { steps: 12 })
+  await page.mouse.up()
+  await expect(battle.locator('.cc-you .cc-stage-card')).toBeVisible()
+})
+
 test('a live name is reserved, then released when its socket disconnects', async ({ browser }) => {
   const owner = await browser.newPage()
   const rival = await browser.newPage()

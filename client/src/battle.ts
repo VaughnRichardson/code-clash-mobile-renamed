@@ -770,9 +770,12 @@ export class BattleScreen {
         node.style.removeProperty('transform')
         node.classList.remove('dragging')
         target.classList.remove('drag-over')
-        node.removeEventListener('pointermove', move)
-        node.removeEventListener('pointerup', finish)
-        node.removeEventListener('pointercancel', cancel)
+        window.removeEventListener('pointermove', move)
+        window.removeEventListener('pointerup', finish)
+        window.removeEventListener('pointercancel', cancel)
+        if (node.hasPointerCapture(down.pointerId)) {
+          node.releasePointerCapture(down.pointerId)
+        }
       }
       const move = (event: PointerEvent): void => {
         if (event.pointerId !== down.pointerId) return
@@ -798,10 +801,19 @@ export class BattleScreen {
         if (event.pointerId === down.pointerId) clear()
       }
 
-      node.setPointerCapture(down.pointerId)
-      node.addEventListener('pointermove', move)
-      node.addEventListener('pointerup', finish)
-      node.addEventListener('pointercancel', cancel)
+      // Keep receiving a finger/mouse movement even after it leaves the card.
+      // On some mobile browsers pointer capture alone does not deliver the
+      // final release consistently once the card is translated under the
+      // finger, so the temporary window listeners are the reliable route.
+      try {
+        node.setPointerCapture(down.pointerId)
+      } catch {
+        // The window listeners below still make the drag usable if capture is
+        // unavailable (for example, a synthetic accessibility interaction).
+      }
+      window.addEventListener('pointermove', move)
+      window.addEventListener('pointerup', finish)
+      window.addEventListener('pointercancel', cancel)
     })
   }
 
