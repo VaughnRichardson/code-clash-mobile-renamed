@@ -10,7 +10,7 @@ export const campaignScreen: MockupScreenRenderer = {
     const difficulty = el('select', { class: 'mockup-select' })
     for (const level of state.catalog.difficulties) difficulty.append(el('option', { value: level, text: level[0].toUpperCase() + level.slice(1), selected: level === state.campaign.difficulty }))
     difficulty.addEventListener('change', () => actions.setDifficulty(difficulty.value as typeof state.campaign.difficulty))
-    panel.append(button('Choose or edit deck', () => actions.openCollection('campaign'), { class: 'mockup-secondary' }), el('label', { text: 'House temperament' }), difficulty, button('Start campaign battle', () => actions.startBattle('campaign'), { class: 'mockup-primary' }))
+    panel.append(button(`Edit deck · ${state.deck.name}`, () => actions.openCollection('campaign'), { class: 'mockup-secondary' }), el('label', { text: 'House temperament' }), difficulty, button('Start campaign battle', () => actions.startBattle('campaign'), { class: 'mockup-primary' }))
     root.append(panel)
   },
 }

@@ -10,6 +10,44 @@ approved changes are implemented in both the normal online client and the
 `?mockup=1` offline review flow. Keep those two paths visually and behaviorally
 in lockstep when making future changes.
 
+## 2026-08-03 deck-order and mockup-battle update
+
+- **Deck Creator now opens on Deck order.** It renders every individual card
+  as an unstacked portrait tile, numbered in draw order. The tile's large grip
+  supports native desktop drag-and-drop, pointer-based touch/pen reordering,
+  and keyboard arrow-key movement. `Use this deck and return` persists that
+  exact order; deck order is play order.
+- **Card pool remains a real collapsible sheet.** It is collapsed by default
+  and opens from the `Open card pool` handle. Leader selection, deck choice,
+  duplicate/new deck actions, add/remove controls, and validation remain in
+  that sheet; no screenshot/peek or separate route is used.
+- **Campaign visibility is explicit.** The Campaign action now reads
+  `Edit deck · <selected deck name>` and updates immediately after a saved
+  deck choice, so the deck that will start the battle is obvious.
+- **Offline mockup battle has one exit.** The working parent `Back to menu`
+  control is at the upper left; the obsolete, non-working iframe `Main menu`
+  control was removed. Fielding and resolving a duel now trigger visible
+  entry, lunge, and impact feedback (with a non-motion visual cue when reduced
+  motion is enabled).
+
+Verification for this update:
+
+```text
+client: npm run build
+result: passed
+
+client: npm test -- --grep "mockup mode|deck builder enforces|compact deck creator|Campaign launches|leader can be chosen"
+result: 5 passed
+
+client browser suite (preceding full regression batch)
+result: 17 passed, 1 skipped
+
+manual mockup check: ?mockup at 390x844
+result: Deck order is the default, the real Card pool expands, the Campaign
+deck label updates, Back to menu is the only battle exit, and the iframe
+contains no cc-exit-battle control.
+```
+
 ## Approved screen flow
 
 1. **Home** — three equal-height portrait cards in this order: Campaign,

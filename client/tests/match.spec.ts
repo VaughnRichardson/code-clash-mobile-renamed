@@ -100,6 +100,14 @@ test('mockup mode uses the same home, collection, and offline compete flow', asy
   await expect(page.locator('#room-code')).toHaveText('MOCK')
   await page.click('text=Start offline battle')
   await expect(page.locator('.mockup-real-battle')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Back to menu' })).toBeVisible()
+  await expect(page.frameLocator('.mockup-real-battle').locator('#cc-exit-battle')).toHaveCount(0)
+  const battle = page.frameLocator('.mockup-real-battle')
+  await expect(battle.locator('.cc-unit-card').first()).toBeVisible()
+  await battle.locator('.cc-unit-card').first().click()
+  await expect(battle.locator('.cc-board')).toHaveClass(/cc-enter/)
+  await page.getByRole('button', { name: 'Back to menu' }).click()
+  await expect(page.locator('h1')).toHaveText('Card Clash')
 })
 
 test('a live name is reserved, then released when its socket disconnects', async ({ browser }) => {
@@ -167,6 +175,7 @@ test('the deck builder enforces card limits and legal deck size', async ({ page 
   await page.click('#edit-deck')
 
   await expect(page.locator('.deck-creator-count')).toHaveText('30/30')
+  await page.getByRole('button', { name: 'Open card pool' }).click()
   await expect(page.getByRole('button', { name: 'Add Grunt' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Remove Vanguard' }).click()
   await expect(page.locator('.deck-creator-count')).toHaveText('29/30')
@@ -176,48 +185,61 @@ test('the deck builder enforces card limits and legal deck size', async ({ page 
   await expect(page.locator('.deck-creator-count')).toHaveText('30/30')
 })
 
-test('the compact deck creator selects decks, collapses, reorders, and returns', async ({ page }) => {
+test('the compact deck creator defaults to deck order, reorders, persists, and returns', async ({ page }) => {
   await openApp(page, 'DeckEditorFlow')
   await openCampaign(page)
-  await page.getByRole('button', { name: 'Choose or edit deck' }).click()
+  await page.getByRole('button', { name: /^Edit deck/ }).click()
+
+  await expect(page.locator('#app')).toHaveAttribute('data-deck-sheet', 'collapsed')
+  await expect(page.locator('.deck-creator-order-panel')).toBeVisible()
 
   await page.getByRole('button', { name: 'Choose a deck' }).click()
   await expect(page.getByRole('menu')).toBeVisible()
   await expect(page.getByRole('menuitem', { name: /Choose Starter/ })).toBeVisible()
 
-  // Choosing the current deck closes the menu without losing the return path.
+  // Choosing the current deck returns to the main ordering surface.
   await page.getByRole('menuitem', { name: /Choose Starter/ }).click()
-  await page.locator('.deck-creator-grabber').click()
+  await expect(page.locator('#app')).toHaveAttribute('data-deck-sheet', 'collapsed')
   await expect(page.locator('.deck-creator-order-panel')).toBeVisible()
 
   const orderNames = await page.locator('.deck-creator-order-copy strong').allInnerTexts()
   const boundary = orderNames.findIndex((name, index) =>
     index < orderNames.length - 1 && name !== orderNames[index + 1])
   expect(boundary).toBeGreaterThanOrEqual(0)
-  const movingRow = page.locator(`[data-deck-index="${boundary}"]`)
+  const movingRow = page.locator(`[data-deck-order-index="${boundary}"]`)
+  const dropRow = page.locator(`[data-deck-order-index="${boundary + 1}"]`)
   const movingName = orderNames[boundary]
-  await movingRow.getByRole('button', { name: `Move ${movingName} later` }).click()
+  await movingRow.locator('.deck-creator-order-grip')
+    .dragTo(dropRow.locator('.deck-creator-order-grip'))
   await expect(page.locator(
-    `[data-deck-index="${boundary + 1}"] .deck-creator-order-copy strong`))
+    `[data-deck-order-index="${boundary + 1}"] .deck-creator-order-copy strong`))
     .toHaveText(movingName)
 
   await page.getByRole('button', { name: 'Use this deck and return' }).click()
   await expect(page.getByRole('heading', { name: 'Play the house' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Start battle' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Edit deck/ })).toContainText('Starter')
+
+  await page.getByRole('button', { name: /^Edit deck/ }).click()
+  await expect(page.locator(
+    `[data-deck-order-index="${boundary + 1}"] .deck-creator-order-copy strong`))
+    .toHaveText(movingName)
 })
 
 test('Campaign launches the exact selected deck without asking for a session name', async ({ page }) => {
   await page.setViewportSize(PHONE)
   await page.goto('/')
   await openCampaign(page)
-  await page.getByRole('button', { name: 'Choose or edit deck' }).click()
+  await page.getByRole('button', { name: /^Edit deck/ }).click()
 
   await page.getByRole('button', { name: 'Duplicate deck' }).click()
   await page.getByRole('textbox', { name: 'Deck name' }).fill('Oracle Trial')
+  await page.getByRole('button', { name: 'Open card pool' }).click()
   await page.locator('[data-leader="oracle"]').click()
   await page.getByRole('button', { name: 'Use this deck and return' }).click()
 
   await expect(page.getByRole('heading', { name: 'Oracle Trial' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Edit deck/ })).toContainText('Oracle Trial')
   await expect(page.getByText('30/30 cards · Oracle', { exact: true })).toBeVisible()
   await expect(page.getByRole('textbox', { name: 'Session name' })).toHaveCount(0)
 
@@ -229,6 +251,7 @@ test('Campaign launches the exact selected deck without asking for a session nam
 test('a leader can be chosen and is carried into the battle', async ({ page }) => {
   await openApp(page, 'Ana')
   await page.click('#edit-deck')
+  await page.getByRole('button', { name: 'Open card pool' }).click()
   await page.locator('[data-leader="oracle"]').click()
   await expect(page.locator('[data-leader="oracle"]')).toHaveClass(/selected/)
   await page.getByRole('button', { name: 'Use this deck and return' }).click()

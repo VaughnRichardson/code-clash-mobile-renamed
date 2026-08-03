@@ -3309,7 +3309,7 @@ button.card.held::before {
   .tug-score { height: 18px; font-size: 11px; }
 }
 
-.mockup-real-battle-head{position:fixed;z-index:20;top:12px;right:12px;display:flex;align-items:center;gap:12px}.mockup-real-battle-head .mockup-secondary{width:auto;margin:0;padding:9px 12px}.mockup-real-battle{display:block;width:100vw;height:100vh;height:100dvh;min-height:100vh;margin:0;border:0;border-radius:0;background:#1d2c2b;box-shadow:none}
+.mockup-real-battle-head{position:fixed;z-index:20;top:12px;left:12px;display:flex;align-items:center;gap:12px}.mockup-real-battle-head .mockup-secondary{width:auto;margin:0;padding:9px 12px}.mockup-real-battle{display:block;width:100vw;height:100vh;height:100dvh;min-height:100vh;margin:0;border:0;border-radius:0;background:#1d2c2b;box-shadow:none}
 #app[data-screen="battle"]{max-width:none;width:100vw;margin:0;padding:0;overflow:hidden}
 #app[data-screen="battle"] .mockup-real-battle-head .mockup-eyebrow{display:none}
 

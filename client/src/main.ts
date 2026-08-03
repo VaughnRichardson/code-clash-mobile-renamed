@@ -185,7 +185,7 @@ function renderCampaign(): void {
     el('span', { class: 'eyebrow', text: 'Your deck' }),
     el('h2', { text: deck.name }),
     el('p', { class: 'mode-copy', text: `${deck.cards.length}/${catalog.deck_size} cards · ${catalog.leaders.find(item => item.id === deck.leader)?.name ?? 'Leader'}` }),
-    button('Choose or edit deck', () => openDeck('campaign'), { class: 'ghost wide' }),
+    button(`Edit deck · ${deck.name}`, () => openDeck('campaign'), { class: 'ghost wide' }),
     el('label', { text: 'House temperament' }),
     difficulty,
     button('Start battle', () => startCampaign(difficulty.value), {

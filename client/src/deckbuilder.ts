@@ -108,10 +108,15 @@ export function renderDeckBuilder(
   let deck = structuredClone(initial)
   selectedRecord.deck = structuredClone(initial)
   let validationError = ''
-  let sheetOpen = true
+  // The ordering view is the primary deck-building surface. The card pool is a
+  // real expandable sheet over it, rather than a second screen or a static peek.
+  let sheetOpen = false
   let deckMenuOpen = false
   let orderScrollTop = 0
   let draggingIndex: number | null = null
+  let pointerDragIndex: number | null = null
+  let pointerDragId: number | null = null
+  let pointerDropIndex: number | null = null
 
   const counts = (): Map<string, number> => {
     const result = new Map<string, number>()
@@ -170,6 +175,7 @@ export function renderDeckBuilder(
     deck = structuredClone(next.deck)
     validationError = ''
     deckMenuOpen = false
+    sheetOpen = false
     draw()
   }
 
@@ -226,39 +232,29 @@ export function renderDeckBuilder(
         el('span', { class: 'deck-creator-marker', style: `left:${powerShare}%` })),
       el('span', { class: 'deck-creator-chip stamina', text: String(stamina) })))
 
-    const peek = el('div', { class: 'deck-creator-peek', 'aria-hidden': 'true' })
-    for (const name of deck.cards.slice(0, 3)) {
-      const art = cardArt(name)
-      peek.append(el('div', { class: 'deck-creator-peek-card' }, art ? image(art, '', '') : null))
-    }
-
     const orderPanel = el('section', {
       class: 'deck-creator-order-panel', 'aria-label': 'Deck order',
       'aria-hidden': sheetOpen,
     }, el('div', { class: 'deck-creator-order-heading' },
       el('div', {}, el('strong', { text: 'Deck order' }),
-        el('small', { text: 'Cards draw from top to bottom.' })),
+        el('small', { text: 'Drag cards to set draw order.' })),
       el('span', { text: `${deck.cards.length} cards` })))
     const orderList = el('div', { class: 'deck-creator-order-list' })
     deck.cards.forEach((name, index) => {
       const spec = catalog.cards.find(card => card.name === name)
       const art = cardArt(name)
-      const row = el('div', {
-        class: 'deck-creator-order-card', draggable: true,
-        'data-deck-index': index,
+      const row = el('article', {
+        class: 'deck-creator-order-card',
+        'data-deck-order-index': index,
       },
-      el('span', { class: 'deck-creator-order-number', text: String(index + 1).padStart(2, '0') }),
       el('span', { class: 'deck-creator-order-art' }, art ? image(art, '', '') : null),
+      el('span', { class: 'deck-creator-order-number', text: String(index + 1).padStart(2, '0') }),
       el('span', { class: 'deck-creator-order-copy' },
         el('strong', { text: name }),
         el('small', { text: `${spec?.power ?? '?'}·${spec?.stamina ?? '?'} · ${spec?.ability ? pretty(spec.ability) : 'Steady'}` })),
-      button('↑', () => { moveCard(index, index - 1); draw() }, {
-        class: 'deck-creator-order-move', disabled: index === 0,
-        'aria-label': `Move ${name} earlier`,
-      }),
-      button('↓', () => { moveCard(index, index + 1); draw() }, {
-        class: 'deck-creator-order-move', disabled: index === deck.cards.length - 1,
-        'aria-label': `Move ${name} later`,
+      el('span', {
+        class: 'deck-creator-order-grip', text: '⋮⋮', role: 'button', tabindex: 0, draggable: true,
+        'aria-label': `Drag ${name} to change its draw position. Use arrow keys to move it.`,
       }))
       row.addEventListener('dragstart', event => {
         draggingIndex = index
@@ -284,14 +280,70 @@ export function renderDeckBuilder(
         draggingIndex = null
         row.classList.remove('dragging')
       })
+
+      const grip = row.querySelector<HTMLElement>('.deck-creator-order-grip')
+      grip?.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+        event.preventDefault()
+        moveCard(index, index + (event.key === 'ArrowUp' ? -1 : 1))
+        draw()
+      })
+      const clearPointerDrag = (): void => {
+        pointerDragIndex = null
+        pointerDragId = null
+        pointerDropIndex = null
+        for (const card of orderList.querySelectorAll<HTMLElement>('.deck-creator-order-card')) {
+          card.classList.remove('dragging', 'drag-over')
+        }
+      }
+      grip?.addEventListener('pointerdown', event => {
+        // Desktop uses native HTML drag-and-drop; touch and pen use this
+        // pointer path because HTML drag events are not dependable on phones.
+        if (event.pointerType === 'mouse') return
+        pointerDragIndex = index
+        pointerDragId = event.pointerId
+        pointerDropIndex = null
+        row.classList.add('dragging')
+        grip.setPointerCapture?.(event.pointerId)
+        event.preventDefault()
+      })
+      grip?.addEventListener('pointermove', event => {
+        if (pointerDragIndex === null || pointerDragId !== event.pointerId) return
+        event.preventDefault()
+        const target = document.elementFromPoint(event.clientX, event.clientY)
+          ?.closest<HTMLElement>('.deck-creator-order-card[data-deck-order-index]')
+        for (const card of orderList.querySelectorAll<HTMLElement>('.deck-creator-order-card')) {
+          card.classList.remove('drag-over')
+        }
+        const targetIndex = Number(target?.dataset.deckOrderIndex)
+        if (target && Number.isInteger(targetIndex) && targetIndex !== pointerDragIndex) {
+          pointerDropIndex = targetIndex
+          target.classList.add('drag-over')
+        } else pointerDropIndex = null
+      })
+      const completePointerDrag = (event: PointerEvent): void => {
+        if (pointerDragIndex === null || pointerDragId !== event.pointerId) return
+        event.preventDefault()
+        const from = pointerDragIndex
+        const target = document.elementFromPoint(event.clientX, event.clientY)
+          ?.closest<HTMLElement>('.deck-creator-order-card[data-deck-order-index]')
+        const targetIndex = Number(target?.dataset.deckOrderIndex)
+        const to = Number.isInteger(targetIndex) ? targetIndex : pointerDropIndex
+        clearPointerDrag()
+        if (to !== null && to !== from) {
+          moveCard(from, to)
+          draw()
+        }
+      }
+      grip?.addEventListener('pointerup', completePointerDrag)
+      grip?.addEventListener('pointercancel', event => {
+        if (pointerDragId === event.pointerId) clearPointerDrag()
+      })
       orderList.append(row)
     })
     orderPanel.append(orderList)
 
-    const scrim = button('', () => { sheetOpen = false; deckMenuOpen = false; draw() }, {
-      class: 'deck-creator-scrim', 'aria-label': 'Collapse card pool and edit deck order',
-    })
-    root.append(peek, orderPanel, scrim)
+    root.append(orderPanel)
 
     const sheet = el('section', {
       class: `deck-creator-sheet${sheetOpen ? '' : ' collapsed'}`,
