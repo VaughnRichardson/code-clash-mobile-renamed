@@ -129,6 +129,9 @@ result: passed
 
 client: npm test -- --grep "Campaign exposes a missing session name"
 result: 1 passed
+
+client browser suite (completed in bounded batches)
+result: 17 passed, 1 skipped
 ```
 
 The skipped browser case is the retired ordered-list Deck Builder contract; the
