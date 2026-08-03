@@ -1,4 +1,4 @@
-import { leaderArt, image } from './art'
+import { cardArt, image, leaderArt } from './art'
 import { button, clear, el, pretty } from './ui'
 import type { Catalog, DeckPayload } from './types'
 
@@ -15,225 +15,116 @@ export function loadSavedDeck(catalog: Catalog): DeckPayload {
 }
 
 export function saveDeck(deck: DeckPayload): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(deck))
-  } catch {
-    /* Private mode: the deck simply will not persist. */
-  }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(deck)) } catch { /* private mode */ }
 }
 
-/**
- * The deck builder.
- *
- * Deck order is play order, so the list is explicit rather than draggable.
- * Large move controls are slower than freeform drag, but they are predictable
- * under a thumb and accessible to keyboards and assistive technology.
- */
 export function renderDeckBuilder(
-  root: HTMLElement, catalog: Catalog, deck: DeckPayload,
+  root: HTMLElement, catalog: Catalog, initial: DeckPayload,
   onDone: (deck: DeckPayload) => void, onBack: () => void,
+  onChange?: (deck: DeckPayload) => void,
 ): void {
+  let deck = structuredClone(initial)
+  let validationError = ''
+
   const counts = (): Map<string, number> => {
-    const map = new Map<string, number>()
-    for (const name of deck.cards) map.set(name, (map.get(name) ?? 0) + 1)
-    return map
+    const result = new Map<string, number>()
+    for (const name of deck.cards) result.set(name, (result.get(name) ?? 0) + 1)
+    return result
   }
 
-  const sectionIntro = (
-    step: string, title: string, copy?: string,
-  ): HTMLElement => el('div', { class: `section-intro${copy ? '' : ' compact'}` },
-    el('span', { class: 'step-number', text: step }),
-    el('div', {},
-      el('h2', { text: title }),
-      copy ? el('p', { class: 'muted', text: copy }) : null))
+  const removeCard = (name: string): void => {
+    const index = deck.cards.lastIndexOf(name)
+    if (index < 0) return
+    deck.cards.splice(index, 1)
+    if (deck.boss_slot !== null && deck.boss_slot >= deck.cards.length) deck.boss_slot = null
+  }
 
-  const move = (index: number, delta: number): void => {
-    const target = index + delta
-    if (target < 0 || target >= deck.cards.length) return
-    const [card] = deck.cards.splice(index, 1)
-    deck.cards.splice(target, 0, card)
-    // The boss marks a position, so moving cards around it must carry it.
-    if (deck.boss_slot === index) deck.boss_slot = target
-    else if (deck.boss_slot === target) deck.boss_slot = index
+  const finish = (): void => {
+    if (deck.cards.length !== catalog.deck_size) {
+      validationError = `A battle deck needs exactly ${catalog.deck_size} cards.`
+      draw()
+      return
+    }
+    deck.name = deck.name.trim() || 'Ashen Rush'
+    saveDeck(deck)
+    onChange?.(structuredClone(deck))
+    onDone(structuredClone(deck))
   }
 
   const draw = (): void => {
     clear(root)
     root.dataset.screen = 'deck'
     const used = counts()
-    const completion = Math.round((deck.cards.length / catalog.deck_size) * 100)
+    const leader = catalog.leaders.find(item => item.id === deck.leader)
+    const cardSpecs = deck.cards.map(name => catalog.cards.find(card => card.name === name)).filter(Boolean)
+    const power = cardSpecs.reduce((sum, card) => sum + (card?.power ?? 0), 0)
+    const stamina = cardSpecs.reduce((sum, card) => sum + (card?.stamina ?? 0), 0)
+    const total = Math.max(1, power + stamina)
+    const powerShare = Math.round((power / total) * 1000) / 10
 
-    root.append(el('header', { class: 'deck-heading' },
-      el('div', { class: 'row spread deck-topline' },
-        button('Back', onBack, { class: 'ghost deck-back' }),
-        el('span', { class: 'deck-count',
-          text: `${deck.cards.length} / ${catalog.deck_size}` })),
-      el('span', { class: 'eyebrow', text: 'Write your opening before the duel' }),
-      el('h1', { text: 'Battle deck' }),
-      el('p', { class: 'screen-dek',
-        text: 'The first card in this list is the first card you draw. Every move matters.' }),
-      el('div', {
-        class: 'deck-progress', role: 'progressbar',
-        'aria-label': 'Deck completion',
-        'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': completion,
-      }, el('i', { style: `width:${completion}%` }))))
+    root.append(el('div', { class: 'deck-creator-topbar' },
+      button('‹', onBack, { class: 'deck-creator-back', 'aria-label': 'Back' }),
+      el('span', { class: 'deck-creator-name', text: deck.name }),
+      el('span', { class: 'deck-creator-count', text: `${deck.cards.length}/${catalog.deck_size}` })))
 
-    const leaderPanel = el('section', { class: 'panel leader-panel' },
-      sectionIntro('01', 'Choose a leader',
-        'Your leader changes the rhythm of every duel.'))
-    const leaderGrid = el('div', { class: 'leader-grid' })
-    for (const leader of catalog.leaders) {
-      const selected = leader.id === deck.leader
-      const portrait = leaderArt(leader.id)
-      const node = el('button', {
-        type: 'button',
-        class: `leader-card${selected ? ' selected' : ''}`,
+    root.append(el('div', { class: 'deck-creator-tug' },
+      el('span', { class: 'deck-creator-chip power', text: String(power) }),
+      el('div', { class: 'deck-creator-track' },
+        el('i', { class: 'deck-creator-fill power', style: `width:${powerShare}%` }),
+        el('i', { class: 'deck-creator-fill stamina', style: `width:${100 - powerShare}%` }),
+        el('span', { class: 'deck-creator-marker', style: `left:${powerShare}%` })),
+      el('span', { class: 'deck-creator-chip stamina', text: String(stamina) })))
+
+    const peek = el('div', { class: 'deck-creator-peek', 'aria-hidden': 'true' })
+    for (const name of deck.cards.slice(0, 3)) {
+      const art = cardArt(name)
+      peek.append(el('div', { class: 'deck-creator-peek-card' }, art ? image(art, '', '') : null))
+    }
+    root.append(peek, el('div', { class: 'deck-creator-scrim' }))
+
+    const sheet = el('section', { class: 'deck-creator-sheet' }, el('span', { class: 'deck-creator-grabber' }))
+    const nameInput = el('input', { class: 'deck-creator-name-input', value: deck.name, 'aria-label': 'Deck name' })
+    nameInput.addEventListener('input', () => { deck.name = nameInput.value })
+    sheet.append(el('div', { class: 'deck-creator-sheet-header' }, el('div', { class: 'deck-creator-identity' },
+      nameInput,
+      el('span', { class: 'deck-creator-icon', text: '▾', 'aria-hidden': 'true' }),
+      button('⧉', () => { deck = structuredClone(deck); deck.name = `${deck.name} copy`; draw() }, { class: 'deck-creator-icon', 'aria-label': 'Duplicate deck' }),
+      button('✓', finish, { class: 'deck-creator-icon save', 'aria-label': 'Save deck' }))))
+    if (validationError) sheet.append(el('div', { class: 'error', text: validationError }))
+
+    const scroll = el('div', { class: 'deck-creator-scroll' }, el('p', { class: 'deck-creator-label', text: 'Leader' }))
+    const leaders = el('div', { class: 'deck-creator-leaders' })
+    for (const choice of catalog.leaders) {
+      const selected = choice.id === deck.leader
+      const art = leaderArt(choice.id)
+      const node = button(choice.name, () => { deck.leader = choice.id; draw() }, {
+        class: `deck-creator-leader${selected ? ' selected' : ''}`,
         'aria-pressed': selected,
-      },
-        el('span', { class: 'leader-portrait' },
-          portrait ? image(portrait, 'leader-choice-art', '') : null,
-          el('i', { class: 'leader-check', 'aria-hidden': 'true' })),
-        el('span', { class: 'leader-choice-copy' },
-          el('span', { class: 'leader-choice-head' },
-            el('strong', { text: leader.name }),
-            el('span', { class: 'leader-genre', text: leader.genre })),
-          el('span', { class: 'leader-choice-blurb', text: leader.blurb }),
-          el('span', { class: 'leader-tags' },
-            ...leader.tags.map(tag =>
-              el('span', { class: 'chip', text: tag })))))
-      node.setAttribute('data-leader', leader.id)
-      node.addEventListener('click', () => {
-        deck.leader = leader.id
-        draw()
+        'data-leader': choice.id,
       })
-      leaderGrid.append(node)
+      node.replaceChildren(el('span', { class: 'deck-creator-leader-port' }, art ? image(art, '', choice.name) : null), el('span', { text: choice.name }))
+      leaders.append(node)
     }
-    leaderPanel.append(leaderGrid)
-    root.append(leaderPanel)
+    scroll.append(leaders, el('p', { class: 'deck-creator-leader-blurb' },
+      el('strong', { text: leader ? `${leader.name} · ${leader.genre}` : 'Choose a leader' }),
+      document.createTextNode(leader ? ` — ${leader.blurb}` : '')),
+    el('p', { class: 'deck-creator-label', text: 'Card pool' }))
 
-    const deckPanel = el('section', { class: 'panel order-panel' },
-      sectionIntro('02', 'Set the battle order',
-        'Cards play from top to bottom. Abilities stay visible so you can build a sequence, not a guess.'))
-    const list = el('div', { class: 'deck-list' })
-    deck.cards.forEach((name, index) => {
-      const spec = catalog.cards.find(c => c.name === name)
-      const isBoss = deck.boss_slot === index
-      const actions = el('span', { class: 'deck-row-actions' },
-        button('↑', () => {
-          move(index, -1)
-          draw()
-        }, {
-          class: 'reorder-button ghost',
-          disabled: index === 0,
-          'aria-label': `Move ${name} earlier`,
-          'data-move': 'up',
-        }),
-        button('↓', () => {
-          move(index, 1)
-          draw()
-        }, {
-          class: 'reorder-button ghost',
-          disabled: index === deck.cards.length - 1,
-          'aria-label': `Move ${name} later`,
-          'data-move': 'down',
-        }),
-        button('×', () => {
-          deck.cards.splice(index, 1)
-          if (deck.boss_slot !== null && deck.boss_slot >= deck.cards.length) {
-            deck.boss_slot = null
-          }
-          draw()
-        }, {
-          class: 'remove-card ghost',
-          'aria-label': `Remove ${name}`,
-          'data-remove': 'true',
-        }))
-      const row = el('div', { class: `deck-row${isBoss ? ' boss' : ''}` },
-        el('span', { class: 'idx', text: String(index + 1).padStart(2, '0') }),
-        el('span', { class: 'deck-card-copy' },
-          el('span', { class: 'deck-card-head' },
-            el('strong', { text: isBoss ? catalog.boss.name : name }),
-            el('span', {
-              class: 'deck-card-stats',
-              text: isBoss
-                ? `${catalog.boss.power} / ${catalog.boss.stamina}`
-                : `${spec?.power ?? '?'} / ${spec?.stamina ?? '?'}`,
-            })),
-          el('span', {
-            class: 'deck-card-ability',
-            text: isBoss
-              ? `Boss · replaces ${name}`
-              : spec?.ability ? pretty(spec.ability) : 'Steady · no ability',
-          })),
-        actions)
-      row.setAttribute('data-deck-index', String(index))
-      list.append(row)
-    })
-    deckPanel.append(list)
-    root.append(deckPanel)
-
-    const bossPanel = el('section', { class: 'panel boss-panel' },
-      sectionIntro('03', 'Place the boss'),
-      el('p', { class: 'muted',
-        text: `${catalog.boss.name} ${catalog.boss.power}/${catalog.boss.stamina} `
-            + `takes over a deck slot rather than adding one. It must sit in the `
-            + `first ${catalog.boss_max_slot} positions so it arrives before the `
-            + `battle is usually decided.` }))
-    const bossSelect = el('select', { id: 'boss-slot' })
-    bossSelect.append(el('option', { value: 'none', text: 'No boss' }))
-    for (let i = 0; i < Math.min(catalog.boss_max_slot, deck.cards.length); i++) {
-      bossSelect.append(el('option', {
-        value: String(i),
-        text: `Position ${i + 1} · replaces ${deck.cards[i]}`,
-        selected: deck.boss_slot === i,
-      }))
-    }
-    bossSelect.addEventListener('change', () => {
-      deck.boss_slot = bossSelect.value === 'none'
-        ? null : Number(bossSelect.value)
-      draw()
-    })
-    bossPanel.append(bossSelect)
-    root.append(bossPanel)
-
-    const poolPanel = el('section', { class: 'panel pool-panel' },
-      sectionIntro('04', 'Card pool', 'Add replacements from the reserve.'))
+    const pool = el('div', { class: 'deck-creator-pool' })
     for (const spec of catalog.cards) {
-      const have = used.get(spec.name) ?? 0
-      const full = have >= spec.deck_limit
-      const row = el('div', { class: 'pool-row' },
-        el('div', { class: 'pool-card-copy' },
-          el('div', { class: 'name',
-            text: `${spec.name}  ${spec.power}/${spec.stamina}` }),
-          el('div', { class: 'ability',
-            text: spec.ability ? pretty(spec.ability) : 'No ability' })),
-        el('span', { class: 'chip', text: `${have}/${spec.deck_limit}` }),
-        button('+', () => {
-          if (deck.cards.length >= catalog.deck_size || full) return
-          deck.cards.push(spec.name)
-          draw()
-        }, {
-          class: 'pool-add primary',
-          'aria-label': `Add ${spec.name}`,
-          disabled: full || deck.cards.length >= catalog.deck_size,
-        }))
-      row.setAttribute('data-pool', spec.name)
-      poolPanel.append(row)
+      const count = used.get(spec.name) ?? 0
+      const full = count >= spec.deck_limit
+      const art = cardArt(spec.name)
+      const tile = el('article', { class: `deck-creator-card${full ? ' full' : ''}` }, art ? image(art, '', spec.name) : null,
+        el('span', { class: 'deck-creator-badge', text: `${count}/${spec.deck_limit}` }),
+        el('div', { class: 'deck-creator-card-band' }, el('strong', { text: spec.name }), el('small', { text: `${spec.power}·${spec.stamina} · ${spec.ability ? pretty(spec.ability) : 'Steady'}` })))
+      if (count > 0) tile.append(button('−', () => { removeCard(spec.name); draw() }, { class: 'deck-creator-minus', 'aria-label': `Remove ${spec.name}` }))
+      if (!full && deck.cards.length < catalog.deck_size) tile.append(button('+', () => { deck.cards.push(spec.name); draw() }, { class: 'deck-creator-plus', 'aria-label': `Add ${spec.name}` }))
+      pool.append(tile)
     }
-    root.append(poolPanel)
-
-    const short = deck.cards.length !== catalog.deck_size
-    const actions = el('div', { class: 'sticky-actions deck-actions' })
-    if (short) {
-      actions.append(el('div', { class: 'error',
-        text: `A deck is exactly ${catalog.deck_size} cards. You have `
-            + `${deck.cards.length}.` }))
-    }
-    actions.append(button(short ? 'Deck incomplete' : 'Use this deck', () => {
-      saveDeck(deck)
-      onDone(deck)
-    }, { class: 'primary wide', disabled: short, id: 'deck-done' }))
-    root.append(actions)
+    scroll.append(pool)
+    sheet.append(scroll)
+    root.append(sheet)
   }
 
   draw()

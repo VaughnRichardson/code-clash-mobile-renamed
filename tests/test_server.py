@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.decks import Deck, DeckError, starter_deck   # noqa: E402
+from server.app import ACTIVE_NAMES, _session_name  # noqa: E402
 from server.match import Match, Player, Room, make_room_code  # noqa: E402
 
 
@@ -84,6 +85,29 @@ def test_room_codes_avoid_ambiguous_characters():
     codes = "".join(make_room_code(rng) for _ in range(400))
     assert not set(codes) & set("IO01"), \
         "codes get read aloud and typed on phones"
+
+
+def test_session_names_are_required_unique_while_connected_and_reusable():
+    ACTIVE_NAMES.clear()
+    try:
+        assert _session_name(" Ana ") == "Ana"
+        ACTIVE_NAMES.add("ana")
+        with pytest.raises(ValueError, match="already in use"):
+            _session_name("ANA")
+        ACTIVE_NAMES.discard("ana")
+        assert _session_name("ANA") == "ANA"
+    finally:
+        ACTIVE_NAMES.clear()
+
+
+@pytest.mark.parametrize("raw, fragment", [
+    ("", "choose a name"),
+    ("   ", "choose a name"),
+    ("x" * 21, "20 characters"),
+])
+def test_session_names_reject_blank_or_oversized_values(raw, fragment):
+    with pytest.raises(ValueError, match=fragment):
+        _session_name(raw)
 
 
 # ── the information rules, over the wire ─────────────────────────────────────

@@ -133,6 +133,7 @@ class Side:
         self.idx = 0
         self.hand: list[Card] = []
         self.discards = 0
+        self.discard_top: str | None = None
         self.active: Card | None = None
         self.pow = 0
         self.sta = 0
@@ -854,12 +855,14 @@ class Battle:
                     # this the leader banks a discard *and* a card, which is a
                     # double dip on the fewest-discards tiebreak.
                     side.discards += 1
+                    side.discard_top = corpse.name
                 self._emit("revived", seat=seat, card=corpse.name,
                            to=ldr.revive_to, discards=side.discards)
                 continue
 
             side.active = None
             side.discards += 1
+            side.discard_top = corpse.name
             for ability, spent, _slot in corpse.abilities():
                 if ability == MARTYR and not spent and side.remaining() > 0:
                     side.pend_pow += 2
@@ -996,6 +999,7 @@ class Battle:
             "gold": side.gold if own else None,
             "charges": side.charges,
             "discards": side.discards,
+            "discard_top": side.discard_top,
             "remaining": side.remaining(),
             "units": side.live_units(),
             "damage_dealt": side.damage_dealt,

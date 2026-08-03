@@ -26,6 +26,26 @@ pip install -r requirements.txt
 Open the printed URL on a phone. To play someone else: **Create a room**, read
 them the code, they type it in on theirs.
 
+Names are session-only display names: choose one on the main menu, and it is
+released when that browser disconnects. No account database or password is
+required for this prototype.
+
+For a manual tunnel, build the client and start the server on an externally
+reachable port, then attach ngrok to that port:
+
+```sh
+(cd client && npm run build)
+python3 -m uvicorn server.app:app --host 0.0.0.0 --port 8000
+ngrok http 8000
+```
+
+Open the resulting `https://` URL on both devices. The client automatically
+uses `wss://` for the WebSocket when the page is served over HTTPS.
+
+On Windows, `card_clash_mobile_launcher.cmd` rolls those steps into one
+double-clickable launcher. Keep its terminal and the Card Clash Server window
+open while testing.
+
 ## How the game works
 
 **Deck order is play order.** There is no shuffle. The sequence you build is the

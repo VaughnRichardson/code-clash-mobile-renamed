@@ -15,6 +15,16 @@ async function openApp(page: Page, name: string): Promise<void> {
   await page.fill('#name', name)
 }
 
+async function openCampaign(page: Page): Promise<void> {
+  await page.getByRole('button', { name: /Campaign: Play the house/ }).click()
+  await expect(page.getByRole('heading', { name: 'Play the house' })).toBeVisible()
+}
+
+async function openCompete(page: Page): Promise<void> {
+  await page.getByRole('button', { name: /Compete: Find a rival/ }).click()
+  await expect(page.getByRole('heading', { name: 'Find a rival' })).toBeVisible()
+}
+
 /** Answers whatever the battle screen is currently asking, until it stops. */
 async function playUntilIdle(page: Page, budget = 60): Promise<void> {
   for (let i = 0; i < budget; i++) {
@@ -49,7 +59,71 @@ test('the page is readable on a phone and never scrolls sideways', async ({ page
   expect(small, 'tap targets under 40px high').toEqual([])
 })
 
-test('the deck builder enforces order, limits and the boss slot', async ({ page }) => {
+test('Compete requires a session name and does not persist it', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await page.goto('/')
+  await expect(page.locator('h1')).toHaveText('Card Clash')
+  await openCompete(page)
+  await page.click('#create-room')
+  await expect(page.locator('.error')).toContainText('Choose a session name')
+
+  await page.getByRole('button', { name: 'Back to home' }).click()
+  await page.fill('#name', 'Ephemeral')
+  await page.reload()
+  await expect(page.locator('#name')).toHaveValue('')
+})
+
+test('the account button opens the session profile and named decks persist', async ({ page }) => {
+  await openApp(page, 'DeckKeeper')
+  await page.click('#account-button')
+  await expect(page.locator('.home-account-panel')).toHaveClass(/open/)
+  await expect(page.locator('.home-account-panel')).toContainText('session identity')
+
+  await page.click('#edit-deck')
+  await page.fill('.deck-creator-name-input', 'Dawn Order')
+  await page.getByRole('button', { name: 'Save deck' }).click()
+  await page.reload()
+  await page.click('#edit-deck')
+  await expect(page.locator('.deck-creator-name-input')).toHaveValue('Dawn Order')
+})
+
+test('mockup mode uses the same home, collection, and offline compete flow', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await page.goto('/?mockup')
+  await expect(page.locator('h1')).toHaveText('Card Clash')
+  await page.fill('#name', 'OfflinePlayer')
+  await page.click('#edit-deck')
+  await expect(page.locator('.deck-creator-sheet')).toBeVisible()
+  await page.getByRole('button', { name: 'Back' }).click()
+  await openCompete(page)
+  await page.click('#create-room')
+  await expect(page.locator('#room-code')).toHaveText('MOCK')
+  await page.click('text=Start offline battle')
+  await expect(page.locator('.mockup-real-battle')).toBeVisible()
+})
+
+test('a live name is reserved, then released when its socket disconnects', async ({ browser }) => {
+  const owner = await browser.newPage()
+  const rival = await browser.newPage()
+  await openApp(owner, 'SessionName')
+  await openApp(rival, 'SessionName')
+
+  await openCompete(owner)
+  await openCompete(rival)
+  await owner.click('#create-room')
+  const code = await owner.locator('#room-code').innerText()
+  await rival.fill('#code', code)
+  await rival.click('#join-room')
+  await expect(rival.locator('.error')).toContainText('already in use')
+
+  await owner.close()
+  await openCompete(rival)
+  await rival.click('#create-room')
+  await expect(rival.locator('#room-code')).toBeVisible()
+  await rival.close()
+})
+
+test.skip('legacy ordered-list deck builder behavior', async ({ page }) => {
   await openApp(page, 'Ana')
   await page.click('#edit-deck')
 
@@ -88,17 +162,32 @@ test('the deck builder enforces order, limits and the boss slot', async ({ page 
   await expect(page.locator('.error')).toContainText('exactly 30 cards')
 })
 
+test('the deck builder enforces card limits and legal deck size', async ({ page }) => {
+  await openApp(page, 'DeckLimits')
+  await page.click('#edit-deck')
+
+  await expect(page.locator('.deck-creator-count')).toHaveText('30/30')
+  await expect(page.getByRole('button', { name: 'Add Grunt' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Remove Vanguard' }).click()
+  await expect(page.locator('.deck-creator-count')).toHaveText('29/30')
+  await page.getByRole('button', { name: 'Save deck' }).click()
+  await expect(page.locator('.error')).toContainText('exactly 30 cards')
+  await page.getByRole('button', { name: 'Add Vanguard' }).click()
+  await expect(page.locator('.deck-creator-count')).toHaveText('30/30')
+})
+
 test('a leader can be chosen and is carried into the battle', async ({ page }) => {
   await openApp(page, 'Ana')
   await page.click('#edit-deck')
   await page.locator('[data-leader="oracle"]').click()
   await expect(page.locator('[data-leader="oracle"]')).toHaveClass(/selected/)
-  await page.click('#deck-done')
+  await page.getByRole('button', { name: 'Save deck' }).click()
   await expect(page.locator('#edit-deck')).toContainText('Oracle')
 })
 
 test('a solo battle against the house runs to a result', async ({ page }) => {
   await openApp(page, 'Ana')
+  await openCampaign(page)
   await page.selectOption('#difficulty', 'steady')
   await page.click('#play-npc')
 
@@ -163,6 +252,8 @@ test('two players on two phones play a full match', async ({ browser }) => {
   await openApp(ana, 'Ana')
   await openApp(ben, 'Ben')
 
+  await openCompete(ana)
+  await openCompete(ben)
   await ana.click('#create-room')
   const code = await ana.locator('#room-code').innerText()
   expect(code).toHaveLength(4)
@@ -608,6 +699,7 @@ test('the decision screen log is masked on a row boundary', async ({ page }) => 
 
 test('a bad room code is reported instead of hanging', async ({ page }) => {
   await openApp(page, 'Ana')
+  await openCompete(page)
   await page.fill('#code', 'ZZZZ')
   await page.click('#join-room')
   await expect(page.locator('.error')).toContainText('no room')

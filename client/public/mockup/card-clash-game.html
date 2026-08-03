@@ -109,7 +109,7 @@ html, body {
 
 #card-clash-real-game .cc-seat {
   display: grid;
-  grid-template-columns: clamp(72px, 16vw, 96px) minmax(120px, 1fr) clamp(72px, 16vw, 96px);
+  grid-template-columns: clamp(128px, 15vw, 196px) minmax(120px, 1fr) clamp(128px, 15vw, 196px);
   gap: 10px;
   align-items: center;
   min-width: 0;
@@ -140,14 +140,29 @@ html, body {
 }
 
 #card-clash-real-game .cc-piles {
+  position: absolute;
+  z-index: 4;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 12px;
 }
 
 #card-clash-real-game .cc-you .cc-piles {
-  flex-direction: column-reverse;
+  flex-direction: row;
+}
+
+#card-clash-real-game .cc-them .cc-piles {
+  top: clamp(18px, 4vh, 32px);
+  left: clamp(18px, 16vw, 210px);
+  transform: none;
+}
+
+#card-clash-real-game .cc-you .cc-piles {
+  right: clamp(18px, 16vw, 210px);
+  bottom: clamp(18px, 4vh, 32px);
+  transform: none;
 }
 
 #card-clash-real-game .cc-deck,
@@ -213,7 +228,35 @@ html, body {
 }
 
 #card-clash-real-game .cc-empty-discard {
-  opacity: .2;
+  opacity: .55;
+  border: 2px dashed color-mix(in srgb, var(--muted-foreground) 62%, transparent);
+  background: color-mix(in srgb, var(--card) 24%, transparent);
+}
+
+#card-clash-real-game .cc-empty-discard::before {
+  content: "DISCARD";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--muted-foreground) 78%, transparent);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  writing-mode: vertical-rl;
+}
+
+#card-clash-real-game .cc-discard-face {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 2px solid color-mix(in srgb, var(--cc-gold) 72%, var(--foreground));
+  border-radius: 7px;
+  object-fit: cover;
+  object-position: center 28%;
+  box-shadow: 0 4px 9px color-mix(in srgb, var(--foreground) 35%, transparent);
 }
 
 #card-clash-real-game .cc-count {
@@ -383,6 +426,23 @@ html, body {
   font-size: calc(var(--font-size-base) * .46);
   font-weight: 500;
   text-transform: uppercase;
+}
+
+#card-clash-real-game .cc-leader-rule {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  left: 4px;
+  display: -webkit-box;
+  height: 28px;
+  overflow: hidden;
+  color: var(--cc-ink);
+  font-size: 7px;
+  font-weight: 650;
+  line-height: 1.08;
+  text-align: left;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 #card-clash-real-game .cc-leader-help {
@@ -723,11 +783,11 @@ html, body {
    preview without turning the hand into a wall of cards. */
 #card-clash-real-game .cc-deck,
 #card-clash-real-game .cc-discard {
-  width: clamp(48px, 11vw, 64px);
+  width: clamp(58px, 8vw, 92px);
 }
 
 #card-clash-real-game .cc-discard {
-  width: clamp(32px, 8vw, 46px);
+  width: clamp(52px, 6.5vw, 78px);
 }
 
 #card-clash-real-game .cc-leaf::after {
@@ -735,27 +795,65 @@ html, body {
 }
 
 #card-clash-real-game .cc-leader {
-  width: clamp(60px, 15vw, 82px);
+  position: absolute;
+  z-index: 5;
+  width: clamp(88px, 8.5vw, 108px);
   border-radius: 12px;
 }
 
+#card-clash-real-game .cc-them .cc-leader {
+  top: clamp(18px, 4vh, 32px);
+  right: clamp(18px, 4vw, 52px);
+  transform: none;
+}
+
+#card-clash-real-game .cc-you .cc-leader {
+  bottom: clamp(18px, 4vh, 32px);
+  left: clamp(18px, 4vw, 52px);
+  transform: none;
+}
+
+#card-clash-real-game .cc-leader img {
+  inset: 3px 3px 48px;
+  width: calc(100% - 6px);
+  height: calc(100% - 51px);
+}
+
 #card-clash-real-game .cc-leader-name {
+  inset-inline: 4px;
+  bottom: 32px;
   height: 16px;
-  font-size: clamp(8px, 1.7vw, 11px);
+  padding-inline: 2px;
+  font-size: clamp(8px, 1vw, 10px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+#card-clash-real-game .cc-leader-help {
+  top: 4px;
+  right: 4px;
+  bottom: auto;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  color: var(--card);
+  background: color-mix(in srgb, var(--foreground) 74%, transparent);
 }
 
 #card-clash-real-game .cc-stage-card,
 #card-clash-real-game .cc-card-back {
-  width: clamp(110px, 24vw, 150px);
+  width: clamp(102px, 21vw, 132px);
   border-radius: 13px;
 }
 
 #card-clash-real-game .cc-you .cc-stage-card {
-  width: clamp(126px, 28vw, 168px);
+  width: clamp(116px, 24vw, 144px);
 }
 
 #card-clash-real-game .cc-drop {
-  width: clamp(96px, 20vw, 126px);
+  width: clamp(90px, 18vw, 110px);
   border-width: 3px;
 }
 
@@ -804,20 +902,20 @@ html, body {
   }
 
   #card-clash-real-game .cc-seat {
-    grid-template-columns: 52px minmax(80px, 1fr) 52px;
+    grid-template-columns: 110px minmax(80px, 1fr) 110px;
     gap: 5px;
   }
 
   #card-clash-real-game .cc-deck {
-    width: 32px;
+    width: 56px;
   }
 
   #card-clash-real-game .cc-discard {
-    width: 21px;
+    width: 48px;
   }
 
   #card-clash-real-game .cc-leader {
-    width: 43px;
+    width: 72px;
   }
 
   #card-clash-real-game .cc-stage-card,
@@ -1059,7 +1157,11 @@ html, body {
     for (var i = 0; i < shown; i += 1) {
       html += '<i class="cc-discard-leaf" style="--i:' + i + '" aria-hidden="true"></i>';
     }
-    if (count) html += '<span class="cc-count">' + count + '</span>';
+    if (count) {
+      var topDiscard = s.discard[count - 1];
+      html += '<img class="cc-discard-face" src="' + art[topDiscard.name] + '" alt="' + topDiscard.name + '">';
+    }
+    html += '<span class="cc-count">' + count + '</span>';
     html += '</div>';
     return html;
   }
@@ -1079,6 +1181,7 @@ html, body {
     return '<button type="button" class="cc-leader' + (spent ? ' cc-spent' : '') + '" data-leader="' + which + '" aria-label="' + spec.name + '. ' + spec.blurb + '">'
       + '<img src="' + spec.art + '" alt="">'
       + '<span class="cc-leader-name">' + spec.name + '</span>'
+      + '<span class="cc-leader-rule">' + spec.blurb + '</span>'
       + '<span class="cc-leader-help" aria-hidden="true">?</span>'
       + charge
       + '</button>' + info;

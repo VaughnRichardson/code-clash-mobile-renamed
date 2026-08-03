@@ -57,7 +57,8 @@ SIM_PATH = (ENGINE_ROOT.parent / "testproject" / "tools" / "card_sim"
 
 def _load_sim():
     if not SIM_PATH.exists():
-        pytest.skip(f"reference simulator not present at {SIM_PATH}")
+        pytest.skip(f"reference simulator not present at {SIM_PATH}",
+                    allow_module_level=True)
     spec = importlib.util.spec_from_file_location("card_sim_ref", SIM_PATH)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

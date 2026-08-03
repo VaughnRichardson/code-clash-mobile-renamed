@@ -37,6 +37,9 @@ app = FastAPI(title="Card Clash")
 #: friends through a tunnel does not need a database, and a restart clearing
 #: the lobby is the correct behaviour for session-only play.
 ROOMS: dict[str, Room] = {}
+# Names are session identities, not accounts. They are reserved only while a
+# socket is connected and are released in the websocket cleanup path.
+ACTIVE_NAMES: set[str] = set()
 _rng = random.Random()
 
 MAX_ROOMS = 200
@@ -69,6 +72,18 @@ async def _send(ws: WebSocket, payload: dict) -> None:
 
 async def _error(ws: WebSocket, message: str) -> None:
     await _send(ws, {"type": "error", "message": message})
+
+
+def _session_name(raw: object) -> str:
+    """Validate the display name used for this connection's session."""
+    name = str(raw or "").strip()
+    if not name:
+        raise ValueError("choose a name before joining a room")
+    if len(name) > 20:
+        raise ValueError("your name must be 20 characters or fewer")
+    if name.casefold() in ACTIVE_NAMES:
+        raise ValueError("that name is already in use")
+    return name
 
 
 def _reap_rooms() -> None:
@@ -115,8 +130,12 @@ async def game_socket(ws: WebSocket) -> None:
                     await _error(ws, str(exc))
                     continue
 
-                name = str(message.get("name") or "Player")[:20]
-                player = Player(name=name, deck=deck, send=send)
+                try:
+                    name = _session_name(message.get("name"))
+                except ValueError as exc:
+                    await _error(ws, str(exc))
+                    continue
+                player = Player(name=name, deck=deck, send=send, close=ws.close)
 
                 if kind == "create":
                     _reap_rooms()
@@ -150,6 +169,8 @@ async def game_socket(ws: WebSocket) -> None:
                         room = None
                         continue
                     seat = room.add(player)
+
+                ACTIVE_NAMES.add(name.casefold())
 
                 await room.broadcast_lobby()
                 if room.full and room.match is None:
@@ -192,6 +213,26 @@ async def game_socket(ws: WebSocket) -> None:
     finally:
         if player is not None:
             player.connected = False
+            ACTIVE_NAMES.discard(player.name.casefold())
+        # A live PvP match cannot safely replace a seat: the authoritative
+        # battle already owns both decks and seats. End it explicitly so the
+        # remaining browser is not left waiting for a prompt that can never be
+        # answered, and free the room code for a new session.
+        if (room is not None and room.match is not None
+                and not room.match.finished and player is not None):
+            room.match.finished = True
+            for other in room.players:
+                if other is player or other.is_npc or not other.connected:
+                    continue
+                try:
+                    await other.send({
+                        "type": "error",
+                        "message": f"{player.name} disconnected; the battle ended",
+                    })  # type: ignore[misc]
+                except Exception:
+                    other.connected = False
+            ROOMS.pop(room.code, None)
+            room = None
         if room is not None:
             try:
                 await room.broadcast_lobby()

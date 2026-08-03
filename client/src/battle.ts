@@ -389,10 +389,12 @@ export class BattleScreen {
     for (let i = 0; i < leaves; i++) {
       pile.append(el('i', { class: 'discard-leaf', style: `--i:${i}` }))
     }
+    const topArt = side.discard_top ? cardArt(side.discard_top) : null
+    if (topArt) pile.append(image(topArt, 'discard-face', side.discard_top ?? 'Discarded unit'))
     return el('div', {
       class: 'discard',
       'aria-label': `${count} cards in ${isYou ? 'your' : 'their'} discard pile`,
-    }, pile, count ? el('span', { class: 'pile-count', text: String(count) }) : null)
+    }, pile, el('span', { class: 'pile-count', text: String(count) }))
   }
 
   /**
@@ -497,6 +499,7 @@ export class BattleScreen {
         port ? image(port, 'port', '') : el('span', { class: 'port blank' }),
         el('span', { class: 'leader-gloss', 'aria-hidden': 'true' })),
       el('span', { class: 'nm', text: spec?.name ?? pretty(side.leader) }),
+      spec ? el('span', { class: 'leader-rule', text: spec.blurb }) : null,
       carriesCharges
         ? el('span', {
             class: `leader-charge${side.charges ? '' : ' empty'}`,

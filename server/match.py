@@ -38,6 +38,7 @@ class Player:
     name: str
     deck: Deck
     send: object | None = None      # async callable, or None for the NPC
+    close: object | None = None     # async websocket close callable
     difficulty: str = "veteran"
     connected: bool = True
 
@@ -185,8 +186,14 @@ class Match:
             await player.send(payload)       # type: ignore[misc]
         except Exception:
             # A dropped socket must not take the battle down with it; the
-            # match stays alive so the player can reconnect into it.
+            # socket is closed explicitly so the app cleanup path releases the
+            # session name and tears down an abandoned PvP room.
             player.connected = False
+            if player.close is not None:
+                try:
+                    await player.close()      # type: ignore[misc]
+                except Exception:
+                    pass
 
 
 class Room:
@@ -232,3 +239,8 @@ class Room:
                 await player.send(payload)   # type: ignore[misc]
             except Exception:
                 player.connected = False
+                if player.close is not None:
+                    try:
+                        await player.close()  # type: ignore[misc]
+                    except Exception:
+                        pass

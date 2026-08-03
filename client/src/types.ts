@@ -61,6 +61,7 @@ export interface SideView {
   gold: number | null
   charges: number
   discards: number
+  discard_top?: string | null
   remaining: number
   /** Every surviving unit: deck + hand + the active fielded card. */
   units: number
