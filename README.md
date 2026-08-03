@@ -79,9 +79,16 @@ takes over a slot rather than adding one, so fielding it costs you a card.
 python3 -m pytest                 # engine + server
 python3 -m pytest -m slow         # leader round robin
 cd client && npx playwright test  # real browsers at a phone viewport
+cd client && npm run test:regression  # mockup and live Campaign smoke flows
 python3 -m engine.sim             # balance tables
 python3 -m engine.sim seat-bias   # ...one experiment at a time
 ```
+
+`npm run test:mockup` and `npm run test:live` run either half of that
+regression pair while iterating on a screen. Both start from Campaign, pass
+through Deck Creator, enter Battle, and field a card by dragging it onto the
+open position. The mockup run uses `?mockup`; the live run uses the FastAPI
+server, so the two routes cannot silently drift apart.
 
 `engine/sim.py` is a Monte-Carlo harness carried over from the design work. It
 is the instrument for any balance claim — re-run it after changing a rule

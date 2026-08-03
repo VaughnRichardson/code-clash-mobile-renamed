@@ -69,6 +69,19 @@ client: npm test -- --grep "mockup battle card can be dragged|mockup mode uses"
 result: 2 passed
 ```
 
+## 2026-08-03 mockup/live regression coverage
+
+- `client/tests/regression.spec.ts` owns the release-smoke tests for the two
+  visible app modes at the 390×844 phone viewport. The `[mockup]` test runs
+  `?mockup`; the `[live]` test runs against the real FastAPI server.
+- Both cover Campaign, entering and leaving Deck Creator, preserving the
+  selected deck visibility, entering Battle, and dragging a card from hand to
+  the open field. The mockup test also verifies its single working `Back to
+  menu` control.
+- Run `npm run test:regression` for both, or `npm run test:mockup` /
+  `npm run test:live` when working on just one mode. Build first whenever the
+  FastAPI server will be serving the current client bundle.
+
 ## Approved screen flow
 
 1. **Home** — three equal-height portrait cards in this order: Campaign,

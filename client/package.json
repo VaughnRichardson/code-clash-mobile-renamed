@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:mockup": "playwright test regression.spec.ts --grep \\[mockup\\]",
+    "test:live": "playwright test regression.spec.ts --grep \\[live\\]",
+    "test:regression": "playwright test regression.spec.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
